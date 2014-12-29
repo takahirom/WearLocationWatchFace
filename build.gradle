@@ -1,0 +1,16 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.0.+'
+    }
+}
+subprojects{
+
+    repositories {
+        mavenCentral()
+        maven { url 'http://raw.github.com/takahirom/WearSharedPreferences/master/repository/' }
+        maven { url 'http://raw.github.com/takahirom/WearHttp/master/repository/' }
+    }
+}
