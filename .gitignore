@@ -7,3 +7,4 @@
 *.apk
 *.iml
 manifest-merger-release-report.txt
+keys.gradle

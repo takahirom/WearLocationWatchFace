@@ -20,10 +20,14 @@ android {
 }
 
 dependencies {
+    wearApp project(':wear')
+
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:21.0.3'
     compile 'com.kogitune:wear-shared-preferences:0.0.1'
-    compile 'com.kogitune:wear-http:0.0.2'
+    compile 'com.kogitune:wear-http:0.0.3'
 
     wearApp project(':wear')
+    compile 'com.google.android.gms:play-services-wearable:+'
+
 }

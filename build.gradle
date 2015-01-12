@@ -1,16 +1,31 @@
 buildscript {
     repositories {
         mavenCentral()
+        jcenter()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:1.0.+'
     }
 }
 subprojects{
-
     repositories {
         mavenCentral()
         maven { url 'http://raw.github.com/takahirom/WearSharedPreferences/master/repository/' }
-        maven { url 'http://raw.github.com/takahirom/WearHttp/master/repository/' }
+        maven { url 'http://raw.github.com/takahirom/WearHttp/0.0.3/repository/' }
+    }
+}
+apply from:'keys.gradle'
+allprojects {
+    repositories {
+        jcenter()
+    }
+    afterEvaluate {
+        project->
+            if(!project.hasProperty("android")){
+                return;
+            }
+            project.android.defaultConfig {
+                buildConfigField 'String', "FLICKR_API_KEY", project.FLICKR_API_KEY
+            }
     }
 }
