@@ -11,6 +11,7 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
+import android.location.Location;
 import android.support.v7.graphics.Palette;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
@@ -34,10 +35,11 @@ public class WatchFaceService extends CanvasWatchFaceService {
     private Engine engine;
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
     SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+    private LocationGetter locationGetter;
 
     @Override
     public Engine onCreateEngine() {
-
+        locationGetter = new LocationGetter(this);
 
         engine = new Engine() {
             @Override
@@ -57,70 +59,75 @@ public class WatchFaceService extends CanvasWatchFaceService {
             }
 
             @Override
-            public void onDraw(Canvas canvas, Rect bounds) {
+            public void onDraw(Canvas canvas, Rect wearRect) {
                 Log.d(TAG, "onDraw");
                 canvas.drawColor(0, PorterDuff.Mode.CLEAR);
 
-                final Paint whiteMediumPaint = new Paint();
-                whiteMediumPaint.setFilterBitmap(true);
-                whiteMediumPaint.setAntiAlias(true);
-                final Paint whiteBigPaint = new Paint(whiteMediumPaint);
-                whiteMediumPaint.setTextSize(24);
-                whiteBigPaint.setTextSize(72);
-                Log.d(TAG, "test1");
-                float rate = 1.16f;
-                if (bitmap != null) {
-                    Log.d(TAG, "test2");
+                final Paint whiteMediumFontPaint = new Paint();
+                whiteMediumFontPaint.setFilterBitmap(true);
+                whiteMediumFontPaint.setAntiAlias(true);
+                whiteMediumFontPaint.setColor(Color.WHITE);
+                final Paint whiteBigFontPaint = new Paint(whiteMediumFontPaint);
+                whiteMediumFontPaint.setTextSize(24);
+                whiteBigFontPaint.setTextSize(72);
 
-                    rate = (float) bounds.right / bitmap.getWidth();
+                final Paint bottomPaperPaint = new Paint();
 
-
-                    //BitmapからBitmapDrawableを生成
-                    BitmapDrawable drawable = new BitmapDrawable(bitmap);
-                    //drawableの描画領域設定（必須）
-                    drawable.setBounds(0, 0, (int) (bitmap.getWidth() * rate), (int) (bitmap.getHeight() * rate));
-                    //canvasに描画
-                    drawable.draw(canvas);
-
-                    final Palette palette = Palette.generate(bitmap);
-                    if (palette != null) {
-                        Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
-                        if (vibrantSwatch != null) {
-                            final Paint paint = new Paint();
-                            paint.setColor(vibrantSwatch.getRgb());
-                            if (getPeekCardPosition().top > 0) {
-                                canvas.drawRect(0, getPeekCardPosition().top - 40, bounds.right, bounds.bottom, paint);
-                            } else {
-                                canvas.drawRect(0, (float) (bitmap.getHeight() * rate) - 1, bounds.right, bounds.bottom, paint);
-                            }
-                            whiteMediumPaint.setColor(vibrantSwatch.getTitleTextColor());
-                            whiteBigPaint.setColor(Color.WHITE);
-                        }
-                    }
-
+                if (bitmap == null) {
+                    helplesslyShow(canvas, whiteMediumFontPaint, whiteBigFontPaint);
+                    return;
                 }
-                String timeText = timeFormat.format(new Date());
-                drawText(canvas,whiteBigPaint,timeText,rate);
-                canvas.drawText(dateFormat.format(new Date()), 20, (float) (bounds.right / 1.5) + 25, whiteMediumPaint);
+
+                final WatchFaceLayoutCalculator layoutCalc = new WatchFaceLayoutCalculator();
+                layoutCalc.calc(bitmap, wearRect, getPeekCardPosition().top);
+
+                // Create bitmapDrwable from bitmap
+                BitmapDrawable drawable = new BitmapDrawable(bitmap);
+                drawable.setBounds(0, 0, layoutCalc.getLocationImageWidth(), layoutCalc.getLocationImageHeight());
+                drawable.draw(canvas);
+
+                final Palette palette = Palette.generate(bitmap);
+                if (palette != null) {
+                    Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
+                    if (vibrantSwatch != null) {
+                        bottomPaperPaint.setColor(vibrantSwatch.getRgb());
+                        whiteMediumFontPaint.setColor(vibrantSwatch.getTitleTextColor());
+                        whiteBigFontPaint.setColor(Color.WHITE);
+                    }
+                }
+                canvas.drawRect(0, layoutCalc.getBottomPaperTop(), wearRect.right, wearRect.bottom, bottomPaperPaint);
+
+                drawText(canvas, whiteBigFontPaint, timeFormat.format(new Date()), layoutCalc.getTimeTextTop());
+                canvas.drawText(dateFormat.format(new Date()), 20, layoutCalc.getDateTextTop() , whiteMediumFontPaint);
+
                 canvas.save();
             }
-            public void drawText(Canvas canvas, Paint paint , String text,float rate) {
+
+            private void helplesslyShow(Canvas canvas, Paint whiteMediumPaint, Paint whiteBigPaint) {
+                drawText(canvas, whiteBigPaint, timeFormat.format(new Date()), 0);
+                canvas.drawText(dateFormat.format(new Date()), 20, 0, whiteMediumPaint);
+
+                canvas.save();
+            }
+
+            public void drawText(Canvas canvas, Paint paint , String text,float height) {
                 Rect bounds = new Rect();
                 paint.getTextBounds(text, 0, text.length(), bounds);
                 int x = (canvas.getWidth() / 2) - (bounds.width() / 2);
                 float y;
-                if (bitmap == null) {
+                if (height == 0) {
                     y = canvas.getHeight() - 1 - bounds.height();
-                }else {
-                    y = bitmap.getHeight() * rate - 8 ;
+                } else {
+                    y = height;
                 }
-
                 canvas.drawText(text, x, y, paint);
             }
+
 
             @Override
             public void onVisibilityChanged(boolean visible) {
                 if (visible) {
+                    locationGetter.updateLocation();
                     setPhoto();
                 }
             }
@@ -131,7 +138,14 @@ public class WatchFaceService extends CanvasWatchFaceService {
     }
 
     public void setPhoto() {
-        new WearGetText(this).get("https://api.flickr.com/services/rest/?method=flickr.photos.search&group_id=1463451@N25&api_key="+BuildConfig.FLICKR_API_KEY+"&license=1%2C2%2C3%2C4%2C5%2C6&sort=interestingness-desc&lat=35.68937&lon=139.724754&radius=30&extras=url_s&per_page=30&format=json&nojsoncallback=1", new WearGetText.WearGetCallBack() {
+        final Location location = locationGetter.getLastLocation();
+        if (location == null) {
+            Log.d(TAG, "setPhoto location null");
+            return;
+        }
+        String flickrApiUrl = "https://api.flickr.com/services/rest/?method=flickr.photos.search&group_id=1463451@N25&api_key=" + BuildConfig.FLICKR_API_KEY + "&license=1%2C2%2C3%2C4%2C5%2C6&sort=interestingness-desc&lat=" + location.getLatitude() + "&lon=" + location.getLongitude() + "&radius=30&extras=url_s&per_page=30&format=json&nojsoncallback=1";
+        Log.d(TAG, "api url:" + flickrApiUrl);
+        new WearGetText(this).get(flickrApiUrl, new WearGetText.WearGetCallBack() {
             @Override
             public void onGet(String s) {
                 try {
@@ -141,6 +155,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
                     Log.d(TAG, "str:" + showStr);
                     getAndSetBitmap(showStr);
                 } catch (JSONException e) {
+                    Log.d(TAG,"json"+s);
                     e.printStackTrace();
                 }
             }
