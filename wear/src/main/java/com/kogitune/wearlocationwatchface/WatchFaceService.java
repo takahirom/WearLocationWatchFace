@@ -68,8 +68,10 @@ public class WatchFaceService extends CanvasWatchFaceService {
                 whiteMediumFontPaint.setAntiAlias(true);
                 whiteMediumFontPaint.setColor(Color.WHITE);
                 final Paint whiteBigFontPaint = new Paint(whiteMediumFontPaint);
-                whiteMediumFontPaint.setTextSize(24);
-                whiteBigFontPaint.setTextSize(72);
+                final int mediumTextSize = 24;
+                final int bigTextSize = 72;
+                whiteMediumFontPaint.setTextSize(mediumTextSize);
+                whiteBigFontPaint.setTextSize(bigTextSize);
 
                 final Paint bottomPaperPaint = new Paint();
 
@@ -79,7 +81,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
                 }
 
                 final WatchFaceLayoutCalculator layoutCalc = new WatchFaceLayoutCalculator();
-                layoutCalc.calc(bitmap, wearRect, getPeekCardPosition().top);
+                layoutCalc.calc(bitmap, wearRect, getPeekCardPosition().top, mediumTextSize, bigTextSize);
 
                 // Create bitmapDrwable from bitmap
                 BitmapDrawable drawable = new BitmapDrawable(bitmap);
