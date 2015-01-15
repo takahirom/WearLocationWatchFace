@@ -88,15 +88,9 @@ public class WatchFaceService extends CanvasWatchFaceService {
                 drawable.setBounds(0, 0, layoutCalc.getLocationImageWidth(), layoutCalc.getLocationImageHeight());
                 drawable.draw(canvas);
 
-                final Palette palette = Palette.generate(bitmap);
-                if (palette != null) {
-                    Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
-                    if (vibrantSwatch != null) {
-                        bottomPaperPaint.setColor(vibrantSwatch.getRgb());
-                        whiteMediumFontPaint.setColor(vibrantSwatch.getTitleTextColor());
-                        whiteBigFontPaint.setColor(Color.WHITE);
-                    }
-                }
+                bottomPaperPaint.setColor(layoutCalc.getBottomPaperColor());
+                whiteMediumFontPaint.setColor(layoutCalc.getDateTextColor());
+                whiteBigFontPaint.setColor(layoutCalc.getDateTextColor());
                 canvas.drawRect(0, layoutCalc.getBottomPaperTop(), wearRect.right, wearRect.bottom, bottomPaperPaint);
 
                 drawText(canvas, whiteBigFontPaint, timeFormat.format(new Date()), layoutCalc.getTimeTextTop());
