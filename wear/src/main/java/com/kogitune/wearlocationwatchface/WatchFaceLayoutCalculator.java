@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.support.v7.graphics.Palette;
+import android.util.Log;
 
 /**
  * Created by takam on 2015/01/15.
@@ -18,10 +19,16 @@ public class WatchFaceLayoutCalculator {
     private int bottomPaperColor = Color.WHITE;
     private int dateTextColor = Color.WHITE;
     private int timeTextColor = Color.WHITE;
+    private int mediumTextSize = 28;
+    private int bigTextSize = 72;
+    private boolean isCenterTimeText = true;
 
-    public void calc(Bitmap locationImageBitmap, Rect wearRect, int peekCardPosition, int mediumTextSize, int bigTextSize) {
+    public void calc(Bitmap locationImageBitmap, Rect wearRect, int peekCardPosition) {
         final float imageSizeRate = (float) wearRect.right / locationImageBitmap.getWidth();
-        float imageRatio = locationImageBitmap.getWidth() / locationImageBitmap.getHeight();
+        float imageRatio = locationImageBitmap.getWidth() / (float)locationImageBitmap.getHeight();
+        final Palette palette = Palette.generate(locationImageBitmap);
+        Log.d(TAG, "imageSizeRate" + imageSizeRate);
+        Log.d(TAG, "imageRatio" + imageRatio);
         if (imageRatio < 1.4) {
             imageRatio = 1.4f;
         }
@@ -29,16 +36,45 @@ public class WatchFaceLayoutCalculator {
         locationImageLayoutHeight = locationImageBitmap.getWidth() * imageSizeRate;
         locationImageLayoutWidth = locationImageBitmap.getWidth() * imageSizeRate;
         bottomPaperTop = locationImageBitmap.getHeight() * imageSizeRate - 1;
-        timeTextTop = wearRect.right / imageRatio - bigTextSize - 40;
-        dateTextTop = wearRect.right / imageRatio - mediumTextSize - 40;
-
-        final Palette palette = Palette.generate(locationImageBitmap);
         if (palette != null) {
             Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
             if (vibrantSwatch != null) {
                 bottomPaperColor = vibrantSwatch.getRgb();
+            }
+        }
+        if (peekCardPosition > 0) {
+            timeInPictureMode(wearRect, imageRatio, palette);
+            return;
+        }
+        timeInPaperMode(wearRect, imageRatio, palette);
+
+    }
+
+    private void timeInPictureMode(Rect wearRect, float imageRatio, Palette palette) {
+        timeTextTop = wearRect.right / imageRatio - bigTextSize / 2;
+        dateTextTop = wearRect.right / imageRatio + mediumTextSize;
+
+        if (palette != null) {
+            Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
+            if (vibrantSwatch != null) {
                 dateTextColor = vibrantSwatch.getTitleTextColor();
                 timeTextColor = Color.WHITE;
+            }
+        }
+    }
+
+
+    private void timeInPaperMode(Rect wearRect, float imageRatio, Palette palette) {
+        isCenterTimeText = false;
+        bigTextSize = 48;
+        timeTextTop = wearRect.right / imageRatio + bigTextSize;
+        dateTextTop = wearRect.right / imageRatio + bigTextSize + mediumTextSize + 5;
+
+        if (palette != null) {
+            Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
+            if (vibrantSwatch != null) {
+                dateTextColor = vibrantSwatch.getTitleTextColor();
+                timeTextColor = vibrantSwatch.getTitleTextColor();
             }
         }
     }
@@ -73,6 +109,18 @@ public class WatchFaceLayoutCalculator {
 
     public int getTimeTextColor() {
         return timeTextColor;
+    }
+
+    public int getBigTextSize() {
+        return bigTextSize;
+    }
+
+    public int getMediumTextSize() {
+        return mediumTextSize;
+    }
+
+    public boolean isCenterTimeText() {
+        return isCenterTimeText;
     }
 }
 

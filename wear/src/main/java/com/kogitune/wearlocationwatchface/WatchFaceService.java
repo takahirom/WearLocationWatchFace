@@ -12,7 +12,6 @@ import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
-import android.support.v7.graphics.Palette;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.util.Log;
@@ -68,20 +67,24 @@ public class WatchFaceService extends CanvasWatchFaceService {
                 whiteMediumFontPaint.setAntiAlias(true);
                 whiteMediumFontPaint.setColor(Color.WHITE);
                 final Paint whiteBigFontPaint = new Paint(whiteMediumFontPaint);
-                final int mediumTextSize = 24;
-                final int bigTextSize = 72;
-                whiteMediumFontPaint.setTextSize(mediumTextSize);
-                whiteBigFontPaint.setTextSize(bigTextSize);
+
 
                 final Paint bottomPaperPaint = new Paint();
 
                 if (bitmap == null) {
+                    final int mediumTextSize = 24;
+                    final int bigTextSize = 72;
+                    whiteMediumFontPaint.setTextSize(mediumTextSize);
+                    whiteBigFontPaint.setTextSize(bigTextSize);
                     helplesslyShow(canvas, whiteMediumFontPaint, whiteBigFontPaint);
                     return;
                 }
 
                 final WatchFaceLayoutCalculator layoutCalc = new WatchFaceLayoutCalculator();
-                layoutCalc.calc(bitmap, wearRect, getPeekCardPosition().top, mediumTextSize, bigTextSize);
+
+                layoutCalc.calc(bitmap, wearRect, getPeekCardPosition().top);
+                whiteBigFontPaint.setTextSize(layoutCalc.getBigTextSize());
+                whiteMediumFontPaint.setTextSize(layoutCalc.getMediumTextSize());
 
                 // Create bitmapDrwable from bitmap
                 BitmapDrawable drawable = new BitmapDrawable(bitmap);
@@ -90,23 +93,27 @@ public class WatchFaceService extends CanvasWatchFaceService {
 
                 bottomPaperPaint.setColor(layoutCalc.getBottomPaperColor());
                 whiteMediumFontPaint.setColor(layoutCalc.getDateTextColor());
-                whiteBigFontPaint.setColor(layoutCalc.getDateTextColor());
+                whiteBigFontPaint.setColor(layoutCalc.getTimeTextColor());
                 canvas.drawRect(0, layoutCalc.getBottomPaperTop(), wearRect.right, wearRect.bottom, bottomPaperPaint);
 
-                drawText(canvas, whiteBigFontPaint, timeFormat.format(new Date()), layoutCalc.getTimeTextTop());
+                if (layoutCalc.isCenterTimeText()) {
+                    drawCenterText(canvas, whiteBigFontPaint, timeFormat.format(new Date()), layoutCalc.getTimeTextTop());
+                }else{
+                    canvas.drawText(timeFormat.format(new Date()), 20, layoutCalc.getTimeTextTop() , whiteBigFontPaint);
+                }
                 canvas.drawText(dateFormat.format(new Date()), 20, layoutCalc.getDateTextTop() , whiteMediumFontPaint);
 
                 canvas.save();
             }
 
             private void helplesslyShow(Canvas canvas, Paint whiteMediumPaint, Paint whiteBigPaint) {
-                drawText(canvas, whiteBigPaint, timeFormat.format(new Date()), 0);
+                drawCenterText(canvas, whiteBigPaint, timeFormat.format(new Date()), 0);
                 canvas.drawText(dateFormat.format(new Date()), 20, 0, whiteMediumPaint);
 
                 canvas.save();
             }
 
-            public void drawText(Canvas canvas, Paint paint , String text,float height) {
+            public void drawCenterText(Canvas canvas, Paint paint, String text, float height) {
                 Rect bounds = new Rect();
                 paint.getTextBounds(text, 0, text.length(), bounds);
                 int x = (canvas.getWidth() / 2) - (bounds.width() / 2);
