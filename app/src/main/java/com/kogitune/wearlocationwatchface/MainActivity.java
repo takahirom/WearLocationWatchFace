@@ -4,6 +4,11 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
+
+import com.kogitune.wearsharedpreference.WearSharedPreference;
+import com.squareup.picasso.Picasso;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -12,6 +17,12 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        final ImageView beforePhoto = (ImageView) findViewById(R.id.beforePhoto);
+        String beforePhotoUrl = new WearSharedPreference(this).get(getString(R.string.key_preference_photo_url), "");
+        if (beforePhotoUrl.length()==0){
+            return;
+        }
+        Picasso.with(this).load(beforePhotoUrl).into(beforePhoto);
     }
 
 

@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.support.v7.graphics.Palette;
+import android.support.wearable.view.CircledImageView;
 import android.util.Log;
 
 /**

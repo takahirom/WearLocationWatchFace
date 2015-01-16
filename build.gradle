@@ -24,8 +24,9 @@ allprojects {
             if(!project.hasProperty("android")){
                 return;
             }
-            project.android.defaultConfig {
+            project.android.defaultConfig.with {
                 buildConfigField 'String', "FLICKR_API_KEY", "\"" + project.FLICKR_API_KEY + "\""
+                resValue "string", "key_preference_photo_url", "key_preference_photo_url"
             }
     }
 }

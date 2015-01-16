@@ -19,6 +19,7 @@ import android.view.SurfaceHolder;
 
 import com.kogitune.wearhttp.WearGetImage;
 import com.kogitune.wearhttp.WearGetText;
+import com.kogitune.wearsharedpreference.WearSharedPreference;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,12 +36,15 @@ public class WatchFaceService extends CanvasWatchFaceService {
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
     SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
     private LocationGetter locationGetter;
+    public long settingPhotoTime;
+    private static final int INTERVAL_SETTING_PHOTO = 60 * 60 * 60;;
 
     @Override
     public Engine onCreateEngine() {
         locationGetter = new LocationGetter(this);
 
         engine = new Engine() {
+
             @Override
             public void onCreate(SurfaceHolder holder) {
                 super.onCreate(holder);
@@ -130,10 +134,14 @@ public class WatchFaceService extends CanvasWatchFaceService {
             @Override
             public void onVisibilityChanged(boolean visible) {
                 if (visible) {
-                    locationGetter.updateLocation();
-                    setPhoto();
+                    if (settingPhotoTime + INTERVAL_SETTING_PHOTO < System.currentTimeMillis()) {
+                        settingPhotoTime = System.currentTimeMillis();
+                        locationGetter.updateLocation();
+                        setPhoto();
+                    }
                 }
             }
+
         };
 
 
@@ -154,11 +162,25 @@ public class WatchFaceService extends CanvasWatchFaceService {
                 try {
                     final JSONArray photosArray = new JSONObject(s).getJSONObject("photos").getJSONArray("photo");
                     final int nextIndex = new Random().nextInt(photosArray.length());
-                    String showStr = photosArray.getJSONObject(nextIndex).getString("url_s").toString();
-                    Log.d(TAG, "str:" + showStr);
-                    getAndSetBitmap(showStr);
+                    String photoUrl = photosArray.getJSONObject(nextIndex).getString("url_s").toString();
+                    final WearSharedPreference preference = new WearSharedPreference(WatchFaceService.this);
+                    preference.put(getString(R.string.key_preference_photo_url), photoUrl);
+                    preference.sync(new WearSharedPreference.OnSyncListener() {
+                        @Override
+                        public void onSuccess() {
+                            settingPhotoTime = System.currentTimeMillis();
+                        }
+
+                        @Override
+                        public void onFail(Exception e) {
+
+                        }
+                    });
+
+                    Log.d(TAG, "str:" + photoUrl);
+                    getAndSetBitmap(photoUrl);
                 } catch (JSONException e) {
-                    Log.d(TAG,"json"+s);
+                    Log.d(TAG, "json" + s);
                     e.printStackTrace();
                 }
             }
@@ -167,7 +189,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
             public void onFail(Exception e) {
                 e.printStackTrace();
             }
-        });
+        }, 30);
     }
 
     public void getAndSetBitmap(String url) {
