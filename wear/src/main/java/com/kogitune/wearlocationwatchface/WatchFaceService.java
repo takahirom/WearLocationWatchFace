@@ -162,22 +162,10 @@ public class WatchFaceService extends CanvasWatchFaceService {
                     final JSONArray photosArray = new JSONObject(s).getJSONObject("photos").getJSONArray("photo");
                     final int nextIndex = new Random().nextInt(photosArray.length());
                     String photoUrl = photosArray.getJSONObject(nextIndex).getString("url_s").toString();
-                    final WearSharedPreference preference = new WearSharedPreference(WatchFaceService.this);
-                    preference.put(getString(R.string.key_preference_photo_url), photoUrl);
-                    preference.sync(new WearSharedPreference.OnSyncListener() {
-                        @Override
-                        public void onSuccess() {
-                            settingPhotoTime = System.currentTimeMillis();
-                        }
-
-                        @Override
-                        public void onFail(Exception e) {
-
-                        }
-                    });
+                    savePhotoUrl(photoUrl);
 
                     Log.d(TAG, "str:" + photoUrl);
-                    getAndSetBitmap(photoUrl);
+                    getAndSettingPhotoBitmap(photoUrl);
                 } catch (JSONException e) {
                     Log.d(TAG, "json" + s);
                     e.printStackTrace();
@@ -191,7 +179,23 @@ public class WatchFaceService extends CanvasWatchFaceService {
         }, 30);
     }
 
-    public void getAndSetBitmap(String url) {
+    private void savePhotoUrl(String photoUrl) {
+        final WearSharedPreference preference = new WearSharedPreference(this);
+        preference.put(getString(R.string.key_preference_photo_url), photoUrl);
+        preference.sync(new WearSharedPreference.OnSyncListener() {
+            @Override
+            public void onSuccess() {
+                settingPhotoTime = System.currentTimeMillis();
+            }
+
+            @Override
+            public void onFail(Exception e) {
+
+            }
+        });
+    }
+
+    public void getAndSettingPhotoBitmap(String url) {
         new WearGetImage(this).get(url, new WearGetImage.WearGetCallBack() {
             @Override
             public void onGet(Bitmap bitmap) {
