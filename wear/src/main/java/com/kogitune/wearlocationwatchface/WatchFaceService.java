@@ -37,7 +37,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
     SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
     private LocationGetter locationGetter;
     public long settingPhotoTime;
-    private static final int INTERVAL_SETTING_PHOTO = 60 * 60 * 60;;
+    private static final int INTERVAL_SETTING_PHOTO = 60 * 60 * 60 * 1000;
 
     @Override
     public Engine onCreateEngine() {
@@ -135,7 +135,6 @@ public class WatchFaceService extends CanvasWatchFaceService {
             public void onVisibilityChanged(boolean visible) {
                 if (visible) {
                     if (settingPhotoTime + INTERVAL_SETTING_PHOTO < System.currentTimeMillis()) {
-                        settingPhotoTime = System.currentTimeMillis();
                         locationGetter.updateLocation();
                         setPhoto();
                     }
