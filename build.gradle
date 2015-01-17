@@ -21,6 +21,7 @@ allprojects {
             project.android.defaultConfig.with {
                 buildConfigField 'String', "FLICKR_API_KEY", "\"" + project.FLICKR_API_KEY + "\""
                 resValue "string", "key_preference_photo_url", "key_preference_photo_url"
+                resValue "string", "key_preference_photo_title", "key_preference_photo_title"
             }
     }
 }

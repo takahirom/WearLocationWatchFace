@@ -62,10 +62,8 @@ public class WatchFaceService extends CanvasWatchFaceService {
             }
 
             @Override
-            public void onAmbientModeChanged(boolean inAmbientMode) {
-                if (!inAmbientMode) {
-                    invalidate();
-                }
+            public void onPeekCardPositionUpdate(Rect rect) {
+                invalidate();
             }
 
             @Override
@@ -160,7 +158,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
             Log.d(TAG, "setPhoto location null");
             return;
         }
-        String flickrApiUrl = "https://api.flickr.com/services/rest/?method=flickr.photos.search&group_id=1463451@N25&api_key=" + BuildConfig.FLICKR_API_KEY + "&license=1%2C2%2C3%2C4%2C5%2C6&sort=interestingness-desc&lat=" + location.getLatitude() + "&lon=" + location.getLongitude() + "&radius=30&extras=url_m&per_page=30&format=json&nojsoncallback=1";
+        String flickrApiUrl = "https://api.flickr.com/services/rest/?method=flickr.photos.search&group_id=1463451@N25&api_key=" + BuildConfig.FLICKR_API_KEY + "&license=1%2C2%2C3%2C4%2C5%2C6&sort=interestingness-desc&lat=" + location.getLatitude() + "&lon=" + location.getLongitude() + "&radius=30&extras=url_m,url_l&per_page=30&format=json&nojsoncallback=1";
         Log.d(TAG, "api url:" + flickrApiUrl);
         new WearGetText(this).get(flickrApiUrl, new WearGetText.WearGetCallBack() {
             @Override
@@ -169,7 +167,9 @@ public class WatchFaceService extends CanvasWatchFaceService {
                     final JSONArray photosArray = new JSONObject(s).getJSONObject("photos").getJSONArray("photo");
                     final int nextIndex = new Random().nextInt(photosArray.length());
                     String photoUrl = photosArray.getJSONObject(nextIndex).getString("url_m").toString();
-                    savePhotoUrl(photoUrl);
+                    String largePhotoUrl = photosArray.getJSONObject(nextIndex).getString("url_l").toString();
+                    String title = photosArray.getJSONObject(nextIndex).getString("title").toString();
+                    savePhotoUrl(title, largePhotoUrl);
 
                     Log.d(TAG, "str:" + photoUrl);
                     getAndSettingPhotoBitmap(photoUrl);
@@ -183,16 +183,16 @@ public class WatchFaceService extends CanvasWatchFaceService {
             public void onFail(Exception e) {
                 e.printStackTrace();
             }
-        }, 30);
+        }, 60);
     }
 
-    private void savePhotoUrl(String photoUrl) {
+    private void savePhotoUrl(String title, String photoUrl) {
         final WearSharedPreference preference = new WearSharedPreference(this);
         preference.put(getString(R.string.key_preference_photo_url), photoUrl);
+        preference.put(getString(R.string.key_preference_photo_title), title);
         preference.sync(new WearSharedPreference.OnSyncListener() {
             @Override
             public void onSuccess() {
-                settingPhotoTime = System.currentTimeMillis();
             }
 
             @Override
@@ -208,13 +208,14 @@ public class WatchFaceService extends CanvasWatchFaceService {
             public void onGet(Bitmap bitmap) {
                 WatchFaceService.this.bitmap = bitmap;
                 engine.invalidate();
+                settingPhotoTime = System.currentTimeMillis();
             }
 
             @Override
             public void onFail(Exception e) {
                 e.printStackTrace();
             }
-        }, 30);
+        }, 60);
 
     }
 }
