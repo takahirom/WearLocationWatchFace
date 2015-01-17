@@ -62,6 +62,13 @@ public class WatchFaceService extends CanvasWatchFaceService {
             }
 
             @Override
+            public void onAmbientModeChanged(boolean inAmbientMode) {
+                if (!inAmbientMode) {
+                    invalidate();
+                }
+            }
+
+            @Override
             public void onDraw(Canvas canvas, Rect wearRect) {
                 Log.d(TAG, "onDraw");
                 canvas.drawColor(0, PorterDuff.Mode.CLEAR);
@@ -153,7 +160,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
             Log.d(TAG, "setPhoto location null");
             return;
         }
-        String flickrApiUrl = "https://api.flickr.com/services/rest/?method=flickr.photos.search&group_id=1463451@N25&api_key=" + BuildConfig.FLICKR_API_KEY + "&license=1%2C2%2C3%2C4%2C5%2C6&sort=interestingness-desc&lat=" + location.getLatitude() + "&lon=" + location.getLongitude() + "&radius=30&extras=url_s&per_page=30&format=json&nojsoncallback=1";
+        String flickrApiUrl = "https://api.flickr.com/services/rest/?method=flickr.photos.search&group_id=1463451@N25&api_key=" + BuildConfig.FLICKR_API_KEY + "&license=1%2C2%2C3%2C4%2C5%2C6&sort=interestingness-desc&lat=" + location.getLatitude() + "&lon=" + location.getLongitude() + "&radius=30&extras=url_m&per_page=30&format=json&nojsoncallback=1";
         Log.d(TAG, "api url:" + flickrApiUrl);
         new WearGetText(this).get(flickrApiUrl, new WearGetText.WearGetCallBack() {
             @Override
@@ -161,7 +168,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
                 try {
                     final JSONArray photosArray = new JSONObject(s).getJSONObject("photos").getJSONArray("photo");
                     final int nextIndex = new Random().nextInt(photosArray.length());
-                    String photoUrl = photosArray.getJSONObject(nextIndex).getString("url_s").toString();
+                    String photoUrl = photosArray.getJSONObject(nextIndex).getString("url_m").toString();
                     savePhotoUrl(photoUrl);
 
                     Log.d(TAG, "str:" + photoUrl);
