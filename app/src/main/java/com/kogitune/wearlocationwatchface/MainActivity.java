@@ -12,6 +12,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
 import android.widget.ImageView;
+import android.widget.SeekBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.kogitune.wearsharedpreference.WearSharedPreference;
 import com.squareup.picasso.Picasso;
@@ -22,6 +25,7 @@ public class MainActivity extends ActionBarActivity {
 
     private static final String TAG = "MainActivity";
     private Toolbar toolbar;
+    private WearSharedPreference wearSharedPreference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +36,38 @@ public class MainActivity extends ActionBarActivity {
         setSupportActionBar(toolbar);
 
         setupPhotoAndApplyTheme();
+        SeekBar searchRadiusSeekBar = (SeekBar) findViewById(R.id.search_radius);
+        wearSharedPreference = new WearSharedPreference(this);
+        final int radius = wearSharedPreference.get(getString(R.string.key_preference_search_range), getResources().getInteger(R.integer.search_range_default));
+        searchRadiusSeekBar.setProgress(radius - 5);
+        searchRadiusSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public int startProgress;
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                this.startProgress = seekBar.getProgress();
+            }
+
+            @Override
+            public void onStopTrackingTouch(final SeekBar seekBar) {
+                wearSharedPreference.put(getString(R.string.key_preference_search_range),seekBar.getProgress()+5);
+                wearSharedPreference.sync(new WearSharedPreference.OnSyncListener() {
+                    @Override
+                    public void onSuccess() {
+                    }
+
+                    @Override
+                    public void onFail(Exception e) {
+                        Toast.makeText(MainActivity.this,"Sync failed search radius",Toast.LENGTH_LONG).show();
+                        seekBar.setProgress(startProgress);
+                    }
+                });
+            }
+        });
     }
 
     private void setupPhotoAndApplyTheme() {

@@ -30,13 +30,16 @@ public class WatchFaceLayoutCalculator {
         final Palette palette = Palette.generate(locationImageBitmap);
         Log.d(TAG, "imageSizeRate" + imageSizeRate);
         Log.d(TAG, "imageRatio" + imageRatio);
-        if (imageRatio < 1.4) {
-            imageRatio = 1.4f;
+        if (imageRatio < 1.5) {
+            imageRatio = 1.5f;
+        }
+        if (imageRatio > 1.6) {
+            imageRatio = 1.6f;
         }
 
-        locationImageLayoutHeight = locationImageBitmap.getWidth() * imageSizeRate;
+        bottomPaperTop = wearRect.bottom / imageRatio - 1;
+        locationImageLayoutHeight = bottomPaperTop + 1;
         locationImageLayoutWidth = locationImageBitmap.getWidth() * imageSizeRate;
-        bottomPaperTop = locationImageBitmap.getHeight() * imageSizeRate - 1;
         if (palette != null) {
             Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
             if (vibrantSwatch != null) {
