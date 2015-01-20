@@ -17,7 +17,7 @@ public class WatchFaceLayoutCalculator {
     private float bottomPaperTop;
     private float dateTextTop;
     private float timeTextTop;
-    private int bottomPaperColor = Color.WHITE;
+    private int bottomPaperColor = Color.BLACK;
     private int dateTextColor = Color.WHITE;
     private int timeTextColor = Color.WHITE;
     private int mediumTextSize = 28;
