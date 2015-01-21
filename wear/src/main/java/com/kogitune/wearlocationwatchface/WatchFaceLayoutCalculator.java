@@ -1,5 +1,6 @@
 package com.kogitune.wearlocationwatchface;
 
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
@@ -23,8 +24,10 @@ public class WatchFaceLayoutCalculator {
     private int mediumTextSize = 28;
     private int bigTextSize = 72;
     private boolean isCenterTimeText = true;
+    private int actionButtonX;
+    private int actionButtonY;
 
-    public void calc(Bitmap locationImageBitmap, Rect wearRect, int peekCardPosition) {
+    public void calc(Resources res,Bitmap locationImageBitmap, Rect wearRect, int peekCardPosition) {
         final float imageSizeRate = (float) wearRect.right / locationImageBitmap.getWidth();
         float imageRatio = locationImageBitmap.getWidth() / (float)locationImageBitmap.getHeight();
         final Palette palette = Palette.generate(locationImageBitmap);
@@ -46,11 +49,19 @@ public class WatchFaceLayoutCalculator {
                 bottomPaperColor = vibrantSwatch.getRgb();
             }
         }
+
+        int actionButtonMargin = res.getDimensionPixelSize(R.dimen.action_button_margin);
+        int actionButtonRadius = res.getDimensionPixelSize(R.dimen.action_button_diameter);
+
+        actionButtonX = wearRect.right - actionButtonMargin - actionButtonRadius;
+        actionButtonY = (int) (bottomPaperTop - actionButtonRadius / 2);
+
         if (peekCardPosition > 0) {
             timeInPictureMode(wearRect, imageRatio, palette);
             return;
         }
         timeInPaperMode(wearRect, imageRatio, palette);
+
 
     }
 
@@ -125,6 +136,14 @@ public class WatchFaceLayoutCalculator {
 
     public boolean isCenterTimeText() {
         return isCenterTimeText;
+    }
+
+    public int getActionButtonX() {
+        return actionButtonX;
+    }
+
+    public int getActionButtonY() {
+        return actionButtonY;
     }
 }
 
