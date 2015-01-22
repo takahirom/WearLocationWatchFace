@@ -15,6 +15,7 @@ import com.google.android.gms.location.LocationServices;
  */
 public class LocationGetter implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
     private final GoogleApiClient googleAPIClient;
+    private GoogleApiClient.ConnectionCallbacks connectCallbacks;
 
     public LocationGetter(Context context) {
         googleAPIClient = new GoogleApiClient.Builder(context)
@@ -36,7 +37,7 @@ public class LocationGetter implements GoogleApiClient.ConnectionCallbacks, Goog
      * updateLocation if GoogleAPIClient is connected.
      */
     public void updateLocation() {
-        if(!googleAPIClient.isConnected()){
+        if (!googleAPIClient.isConnected()) {
             return;
         }
         LocationServices.FusedLocationApi.requestLocationUpdates(googleAPIClient, buildLocationRequest(), new LocationListener() {
@@ -60,15 +61,21 @@ public class LocationGetter implements GoogleApiClient.ConnectionCallbacks, Goog
     @Override
     public void onConnected(Bundle bundle) {
         updateLocation();
+        if (connectCallbacks != null)
+            connectCallbacks.onConnected(bundle);
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-
+        connectCallbacks.onConnectionSuspended(i);
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
+    }
 
+    public void setConnectCallbacks(GoogleApiClient.ConnectionCallbacks connectCallbacks) {
+        if (connectCallbacks != null)
+            this.connectCallbacks = connectCallbacks;
     }
 }

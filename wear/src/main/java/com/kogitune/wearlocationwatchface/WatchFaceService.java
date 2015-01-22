@@ -13,6 +13,7 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.location.Location;
+import android.os.Bundle;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.util.Log;
@@ -20,6 +21,7 @@ import android.view.SurfaceHolder;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.kogitune.wearhttp.WearGetImage;
 import com.kogitune.wearhttp.WearGetText;
 import com.kogitune.wearsharedpreference.WearSharedPreference;
@@ -256,7 +258,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
     }
 
     private void setPhotoIfNeed() {
-        if (settingPhotoTime + INTERVAL_SETTING_PHOTO < System.currentTimeMillis()) {
+        if (bitmap == null || settingPhotoTime + INTERVAL_SETTING_PHOTO < System.currentTimeMillis()) {
             locationGetter.updateLocation();
             setPhoto();
         }
@@ -266,6 +268,17 @@ public class WatchFaceService extends CanvasWatchFaceService {
         floatingActionBarManager.startRefresh();
         final Location location = locationGetter.getLastLocation();
         if (location == null) {
+            locationGetter.setConnectCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+                @Override
+                public void onConnected(Bundle bundle) {
+                    setPhotoIfNeed();
+                }
+
+                @Override
+                public void onConnectionSuspended(int i) {
+
+                }
+            });
             Log.d(TAG, "setPhoto location null");
             floatingActionBarManager.stopRefresh();
             return;
