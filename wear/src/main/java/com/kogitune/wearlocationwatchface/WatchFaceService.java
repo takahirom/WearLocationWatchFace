@@ -284,13 +284,17 @@ public class WatchFaceService extends CanvasWatchFaceService {
             return;
         }
         int range = new WearSharedPreference(this).get(getString(R.string.key_preference_search_range), getResources().getInteger(R.integer.search_range_default));
-        String flickrApiUrl = "https://api.flickr.com/services/rest/?method=flickr.photos.search&group_id=1463451@N25&api_key=" + BuildConfig.FLICKR_API_KEY + "&license=1%2C2%2C3%2C4%2C5%2C6&sort=interestingness-desc&lat=" + location.getLatitude() + "&lon=" + location.getLongitude() + "&radius=" + range + "&extras=url_n,url_l&per_page=30&format=json&nojsoncallback=1";
+        String flickrApiUrl = "https://api.flickr.com/services/rest/?method=flickr.photos.search&group_id=1463451@N25&api_key=" + BuildConfig.FLICKR_API_KEY + "&license=1%2C2%2C3%2C4%2C5%2C6&lat=" + location.getLatitude() + "&lon=" + location.getLongitude() + "&radius=" + range + "&extras=url_n,url_l&per_page=30&format=json&nojsoncallback=1";
         Log.d(TAG, "api url:" + flickrApiUrl);
         new WearGetText(this).get(flickrApiUrl, new WearGetText.WearGetCallBack() {
             @Override
             public void onGet(String s) {
                 try {
                     final JSONArray photosArray = new JSONObject(s).getJSONObject("photos").getJSONArray("photo");
+                    if (photosArray.length() == 0) {
+                        Toast.makeText(WatchFaceService.this, "Photo not found", Toast.LENGTH_LONG).show();
+                        return;
+                    }
                     final int nextIndex = new Random().nextInt(photosArray.length());
                     String photoUrl = photosArray.getJSONObject(nextIndex).getString("url_n").toString();
 
