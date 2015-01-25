@@ -24,6 +24,7 @@ import java.util.ArrayList;
 
 /**
  * A custom ScrollView that can accept a scroll listener.
+ * from https://github.com/google/iosched
  */
 public class ObservableScrollView extends ScrollView {
     private ArrayList<Callbacks> mCallbacks = new ArrayList<Callbacks>();

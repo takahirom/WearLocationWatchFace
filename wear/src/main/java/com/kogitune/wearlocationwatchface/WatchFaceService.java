@@ -291,8 +291,10 @@ public class WatchFaceService extends CanvasWatchFaceService {
             public void onGet(String s) {
                 try {
                     final JSONArray photosArray = new JSONObject(s).getJSONObject("photos").getJSONArray("photo");
+                    Log.d(TAG, "photoArray" + photosArray.length() + photosArray);
                     if (photosArray.length() == 0) {
                         Toast.makeText(WatchFaceService.this, "Photo not found", Toast.LENGTH_LONG).show();
+                        floatingActionBarManager.stopRefresh();
                         return;
                     }
                     final int nextIndex = new Random().nextInt(photosArray.length());
