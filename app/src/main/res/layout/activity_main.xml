@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <RelativeLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -13,25 +13,22 @@
             android:id="@+id/beforePhoto"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:adjustViewBounds="true" />
-
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/beforePhoto"
-            android:background="?attr/colorPrimary"
-            android:minHeight="?attr/actionBarSize" />
+             />
 
         <LinearLayout
+            android:id="@+id/details_container"
             android:layout_width="match_parent"
             android:layout_height="1000dp"
-            android:layout_below="@id/toolbar"
+            android:paddingTop="16dp"
+            android:paddingLeft="@dimen/keyline_1"
+            android:paddingRight="@dimen/keyline_2_minus_16dp"
+            android:background="#fff"
             android:orientation="vertical">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textAppearance="@android:style/TextAppearance.Medium"
                 android:text="Photo search radius(km)" />
 
             <SeekBar
@@ -41,6 +38,17 @@
                 android:max="25" />
         </LinearLayout>
 
-    </RelativeLayout>
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/beforePhoto"
+            android:background="?attr/colorPrimary"
+            android:minHeight="?attr/actionBarSize" />
+
+        <!-- FAB -->
+        <include layout="@layout/include_add_schedule_fab" />
+
+    </FrameLayout>
 
 </com.kogitune.wearlocationwatchface.widget.ObservableScrollView>

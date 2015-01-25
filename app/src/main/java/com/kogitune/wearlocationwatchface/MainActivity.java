@@ -1,7 +1,6 @@
 package com.kogitune.wearlocationwatchface;
 
 import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.view.ViewCompat;
@@ -9,16 +8,19 @@ import android.support.v7.app.ActionBarActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.animation.GlideAnimation;
-import com.bumptech.glide.request.target.SimpleTarget;
-import com.bumptech.glide.request.target.Target;
+import com.bumptech.glide.request.target.BitmapImageViewTarget;
+import com.kogitune.wearlocationwatchface.util.LUtils;
+import com.kogitune.wearlocationwatchface.util.UIUtils;
+import com.kogitune.wearlocationwatchface.widget.CheckableFrameLayout;
 import com.kogitune.wearlocationwatchface.widget.ObservableScrollView;
 import com.kogitune.wearsharedpreference.WearSharedPreference;
 
@@ -28,19 +30,49 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
     private static final String TAG = "MainActivity";
     private Toolbar toolbar;
     private WearSharedPreference wearSharedPreference;
-    private ObservableScrollView mScrollView;
+    private ObservableScrollView scrollView;
+    private int mPhotoHeightPixels;
+    private View mHeaderBox;
+    private CheckableFrameLayout mAddScheduleButton;
+    private boolean mStarred;
+    private LUtils lUtil;
+    private ImageView beforePhoto;
+    private boolean hasPhoto = false;
+    private static final float PHOTO_ASPECT_RATIO = 1.5f;
+    private int maxHeaderElevation;
+    private int fabElevation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        lUtil = LUtils.getInstance(this);
 
-        mScrollView = (ObservableScrollView) findViewById(R.id.scroll_view);
-        mScrollView.addCallbacks(this);
+        scrollView = (ObservableScrollView) findViewById(R.id.scroll_view);
+        scrollView.addCallbacks(this);
+        scrollView.getViewTreeObserver().addOnGlobalLayoutListener(mGlobalLayoutListener);
+
+        mHeaderBox = findViewById(R.id.toolbar);
+        maxHeaderElevation = getResources().getDimensionPixelSize(
+                R.dimen.session_detail_max_header_elevation);
+        fabElevation = getResources().getDimensionPixelSize(R.dimen.fab_elevation);
+
+        mDetailsContainer = findViewById(R.id.details_container);
+
+        mAddScheduleButton = (CheckableFrameLayout) findViewById(R.id.add_schedule_button);
+        mAddScheduleButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                boolean starred = !mStarred;
+                showStarred(starred, true);
+            }
+        });
 
 
+        beforePhoto = (ImageView) findViewById(R.id.beforePhoto);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle(new WearSharedPreference(this).get(getString(R.string.key_preference_photo_title), ""));
+        toolbar.getMenu().clear();
         setSupportActionBar(toolbar);
 
         setupPhotoAndApplyTheme();
@@ -78,28 +110,79 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         });
     }
 
+
+    private ViewTreeObserver.OnGlobalLayoutListener mGlobalLayoutListener
+            = new ViewTreeObserver.OnGlobalLayoutListener() {
+        @Override
+        public void onGlobalLayout() {
+            recomputePhotoAndScrollingMetrics();
+        }
+    };
+    private int mHeaderHeightPixels;
+    private View mDetailsContainer;
+
+    private void recomputePhotoAndScrollingMetrics() {
+        mHeaderHeightPixels = mHeaderBox.getHeight();
+
+        mPhotoHeightPixels = 0;
+        if (hasPhoto) {
+            mPhotoHeightPixels = (int) (beforePhoto.getWidth() / PHOTO_ASPECT_RATIO);
+            mPhotoHeightPixels = Math.min(mPhotoHeightPixels, scrollView.getHeight() * 2 / 3);
+        }
+
+        ViewGroup.LayoutParams lp;
+        lp = beforePhoto.getLayoutParams();
+        if (lp.height != mPhotoHeightPixels) {
+            lp.height = mPhotoHeightPixels;
+            beforePhoto.setLayoutParams(lp);
+        }
+
+        ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams)
+                mDetailsContainer.getLayoutParams();
+        if (mlp.topMargin != mHeaderHeightPixels + mPhotoHeightPixels) {
+            mlp.topMargin = mHeaderHeightPixels + mPhotoHeightPixels;
+            mDetailsContainer.setLayoutParams(mlp);
+        }
+
+        onScrollChanged(0, 0); // trigger scroll handling
+    }
+
+
+
+    private void showStarred(boolean starred, boolean allowAnimate) {
+        mStarred = starred;
+        mAddScheduleButton.setChecked(mStarred, allowAnimate);
+
+        ImageView iconView = (ImageView) mAddScheduleButton.findViewById(R.id.add_schedule_icon);
+        lUtil.setOrAnimatePlusCheckIcon(iconView, starred, allowAnimate);
+//        mAddScheduleButton.setContentDescription(getString(starred
+//                ? R.string.remove_from_schedule_desc
+//                : R.string.add_to_schedule_desc));
+    }
+
     private void setupPhotoAndApplyTheme() {
-        final ImageView beforePhoto = (ImageView) findViewById(R.id.beforePhoto);
         String beforePhotoUrl = new WearSharedPreference(this).get(getString(R.string.key_preference_photo_url), "");
         Log.d(TAG, "beforePhotoUrl:" + beforePhotoUrl);
         if (beforePhotoUrl.length() == 0) {
             return;
         }
-        Glide.with(this).load(beforePhotoUrl).into((Target) new SimpleTarget<Bitmap>(beforePhoto.getWidth(), (int) (beforePhoto.getWidth() / 1.5)) {
-            @Override
-            public void onLoadStarted(Drawable placeholder) {
-            }
+        Glide.with(this)
+                .load(beforePhotoUrl)
+                .asBitmap()
+                .into(new BitmapImageViewTarget(beforePhoto) {
+                    @Override
+                    public void onResourceReady(Bitmap bitmap, GlideAnimation anim) {
+                        super.onResourceReady(bitmap, anim);
 
-            @Override
-            public void onLoadFailed(Exception e, Drawable errorDrawable) {
-            }
-
-            @Override
-            public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
-                beforePhoto.setImageBitmap(resource);
-                applyTheme(Palette.generate(resource));
-            }
-        });
+                        hasPhoto = true;
+                        Palette.generateAsync(bitmap, new Palette.PaletteAsyncListener() {
+                            @Override
+                            public void onGenerated(Palette palette) {
+                                applyTheme(palette);
+                            }
+                        });
+                    }
+                });
     }
 
     private void applyTheme(Palette generate) {
@@ -121,49 +204,27 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
 
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
+    public void onScrollChanged(int deltaX, int deltaY) {
+        int scrollY = scrollView.getScrollY();
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+        float newTop = Math.max(mPhotoHeightPixels, scrollY);
+        mHeaderBox.setTranslationY(newTop);
+        mAddScheduleButton.setTranslationY(newTop + mHeaderHeightPixels
+                - mAddScheduleButton.getHeight() / 2);
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        float gapFillProgress = 1;
+        if (mPhotoHeightPixels != 0) {
+            gapFillProgress = Math.min(Math.max(UIUtils.getProgress(scrollY,
+                    0,
+                    mPhotoHeightPixels), 0), 1);
         }
 
-        return super.onOptionsItemSelected(item);
-    }
+        ViewCompat.setElevation(mHeaderBox, gapFillProgress * maxHeaderElevation);
+        ViewCompat.setElevation(mAddScheduleButton, gapFillProgress * maxHeaderElevation
+                + fabElevation);
 
-    @Override
-    public void onScrollChanged(int deltaX, int deltaY) {
-        int scrollY = mScrollView.getScrollY();
-
-//        float newTop = Math.max(mPhotoHeightPixels, scrollY);
-//        mHeaderBox.setTranslationY(newTop);
-//        mAddScheduleButton.setTranslationY(newTop + mHeaderHeightPixels
-//                - mAddScheduleButtonHeightPixels / 2);
-//
-//        float gapFillProgress = 1;
-//        if (mPhotoHeightPixels != 0) {
-//            gapFillProgress = Math.min(Math.max(UIUtils.getProgress(scrollY,
-//                    0,
-//                    mPhotoHeightPixels), 0), 1);
-//        }
-//
-//        ViewCompat.setElevation(mHeaderBox, gapFillProgress * mMaxHeaderElevation);
-//        ViewCompat.setElevation(mAddScheduleButton, gapFillProgress * mMaxHeaderElevation
-//                + mFABElevation);
-//
-//        // Move background photo (parallax effect)
-//        mPhotoViewContainer.setTranslationY(scrollY * 0.5f);
+        // Move background photo (parallax effect)
+        beforePhoto.setTranslationY(scrollY * 0.5f);
 
     }
 }
