@@ -249,6 +249,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
 
         @Override
         public void onVisibilityChanged(boolean visible) {
+            super.onVisibilityChanged(visible);
             floatingActionBarManager.setVisible(visible);
             if (visible) {
                 setPhotoIfNeed();

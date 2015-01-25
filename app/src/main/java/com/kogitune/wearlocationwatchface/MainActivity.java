@@ -33,7 +33,7 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
     private ObservableScrollView scrollView;
     private int mPhotoHeightPixels;
     private View mHeaderBox;
-    private CheckableFrameLayout mAddScheduleButton;
+    private CheckableFrameLayout mFabButton;
     private boolean mStarred;
     private LUtils lUtil;
     private ImageView beforePhoto;
@@ -59,8 +59,8 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
 
         mDetailsContainer = findViewById(R.id.details_container);
 
-        mAddScheduleButton = (CheckableFrameLayout) findViewById(R.id.add_schedule_button);
-        mAddScheduleButton.setOnClickListener(new View.OnClickListener() {
+        mFabButton = (CheckableFrameLayout) findViewById(R.id.fab_button);
+        mFabButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 boolean starred = !mStarred;
@@ -151,11 +151,11 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
 
     private void showStarred(boolean starred, boolean allowAnimate) {
         mStarred = starred;
-        mAddScheduleButton.setChecked(mStarred, allowAnimate);
+        mFabButton.setChecked(mStarred, allowAnimate);
 
-        ImageView iconView = (ImageView) mAddScheduleButton.findViewById(R.id.add_schedule_icon);
+        ImageView iconView = (ImageView) mFabButton.findViewById(R.id.add_schedule_icon);
         lUtil.setOrAnimatePlusCheckIcon(iconView, starred, allowAnimate);
-//        mAddScheduleButton.setContentDescription(getString(starred
+//        mFabButton.setContentDescription(getString(starred
 //                ? R.string.remove_from_schedule_desc
 //                : R.string.add_to_schedule_desc));
     }
@@ -209,8 +209,8 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
 
         float newTop = Math.max(mPhotoHeightPixels, scrollY);
         mHeaderBox.setTranslationY(newTop);
-        mAddScheduleButton.setTranslationY(newTop + mHeaderHeightPixels
-                - mAddScheduleButton.getHeight() / 2);
+        mFabButton.setTranslationY(newTop + mHeaderHeightPixels
+                - mFabButton.getHeight() / 2);
 
         float gapFillProgress = 1;
         if (mPhotoHeightPixels != 0) {
@@ -220,7 +220,7 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         }
 
         ViewCompat.setElevation(mHeaderBox, gapFillProgress * maxHeaderElevation);
-        ViewCompat.setElevation(mAddScheduleButton, gapFillProgress * maxHeaderElevation
+        ViewCompat.setElevation(mFabButton, gapFillProgress * maxHeaderElevation
                 + fabElevation);
 
         // Move background photo (parallax effect)

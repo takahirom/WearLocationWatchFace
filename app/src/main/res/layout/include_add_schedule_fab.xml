@@ -16,7 +16,7 @@
 
 <com.kogitune.wearlocationwatchface.widget.CheckableFrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/add_schedule_button"
+    android:id="@+id/fab_button"
     android:layout_width="@dimen/add_to_schedule_button_height"
     android:layout_height="@dimen/add_to_schedule_button_height"
     android:layout_marginRight="@dimen/keyline_1"

@@ -12,7 +12,7 @@ import android.util.Log;
  * Created by takam on 2015/01/15.
  */
 public class WatchFaceLayoutCalculator {
-    private static final String TAG = "WatchFaceLayoutCalculator";
+    private static final String TAG = "LayoutCalculator";
     private float locationImageLayoutHeight;
     private float locationImageLayoutWidth;
     private float bottomPaperTop;

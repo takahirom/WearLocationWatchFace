@@ -21,7 +21,7 @@ import android.widget.FrameLayout;
  */
 public class FloatingActionBarManager {
 
-    private static final String TAG = "FloatingActionBarManager";
+    private static final String TAG = "FloatingActionManager";
     private final CircledImageView circledImageView;
     private final WindowManager windowManager;
     private final Context context;
