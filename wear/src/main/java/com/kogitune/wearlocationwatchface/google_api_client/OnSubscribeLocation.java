@@ -1,4 +1,4 @@
-package com.kogitune.wearlocationwatchface;
+package com.kogitune.wearlocationwatchface.google_api_client;
 
 import android.location.Location;
 
@@ -12,12 +12,12 @@ import rx.Subscriber;
 /**
  * Created by takam on 2015/01/13.
  */
-public class LocationGetObservable implements Observable.OnSubscribe<Location> {
+public class OnSubscribeLocation implements Observable.OnSubscribe<Location> {
     private GoogleApiClient googleAPIClient;
     private Subscriber<? super Location> subscriber;
 
 
-    public LocationGetObservable(GoogleApiClient client) {
+    public OnSubscribeLocation(GoogleApiClient client) {
         this.googleAPIClient = client;
     }
 

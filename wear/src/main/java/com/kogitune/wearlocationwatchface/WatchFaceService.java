@@ -12,7 +12,6 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
-import android.location.Location;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.util.Log;
@@ -20,8 +19,8 @@ import android.view.SurfaceHolder;
 import android.view.View;
 import android.widget.Toast;
 
-import com.kogitune.wearhttp.WearGetImage;
-import com.kogitune.wearhttp.WearGetText;
+import com.kogitune.wearlocationwatchface.google_api_client.GoogleApiClientObservable;
+import com.kogitune.wearlocationwatchface.google_api_client.OnSubscribeLocation;
 import com.kogitune.wearsharedpreference.WearSharedPreference;
 
 import org.json.JSONArray;
@@ -32,10 +31,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
 
-import rx.Observable;
-
 import static rx.android.schedulers.AndroidSchedulers.mainThread;
-import static rx.schedulers.Schedulers.newThread;
 
 public class WatchFaceService extends CanvasWatchFaceService {
     private static final String TAG = "WatchFaceService";
@@ -44,8 +40,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
     private Engine engine;
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
     SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
-    private LocationGetObservable locationGetObservable;
-    public long settingPhotoTime;
+    public long beforeRefreshTime;
     private static final int INTERVAL_SETTING_PHOTO = 60 * 60 * 1000;
     private FloatingActionBarManager floatingActionBarManager;
     private String largePhotoUrl;
@@ -65,7 +60,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
         floatingActionBarManager.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                setPhoto();
+                startRefresh();
             }
         });
 
@@ -85,7 +80,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
                             .setCardPeekMode(WatchFaceStyle.PEEK_MODE_SHORT)
                             .setPeekOpacityMode(WatchFaceStyle.PEEK_OPACITY_MODE_TRANSLUCENT)
                             .build());
-            setPhotoIfNeed();
+            refreshIfNeed();
         }
 
         @Override
@@ -254,73 +249,74 @@ public class WatchFaceService extends CanvasWatchFaceService {
             super.onVisibilityChanged(visible);
             floatingActionBarManager.setVisible(visible);
             if (visible) {
-                setPhotoIfNeed();
+                refreshIfNeed();
             }
         }
 
     }
 
-    private void setPhotoIfNeed() {
-        if (bitmap == null || settingPhotoTime + INTERVAL_SETTING_PHOTO < System.currentTimeMillis()) {
-            setPhoto();
+    private void refreshIfNeed() {
+        if (bitmap == null || beforeRefreshTime + INTERVAL_SETTING_PHOTO < System.currentTimeMillis()) {
+            startRefresh();
         }
     }
 
-    public void setPhoto() {
+    public void startRefresh() {
         floatingActionBarManager.startRefresh();
-        Observable.create(new GoogleAPIClientConnectionObservable(this)).switchMap((apiClient) -> {
-            return Observable.create(new LocationGetObservable(apiClient));
-        }).map(location -> {
-            int range = new WearSharedPreference(this).get(getString(R.string.key_preference_search_range), getResources().getInteger(R.integer.search_range_default));
-            return "https://api.flickr.com/services/rest/?method=flickr.photos.search&group_id=1463451@N25&api_key=" + BuildConfig.FLICKR_API_KEY + "&license=1%2C2%2C3%2C4%2C5%2C6&lat=" + location.getLatitude() + "&lon=" + location.getLongitude() + "&radius=" + range + "&extras=url_n,url_l&per_page=30&format=json&nojsoncallback=1";
-        }).switchMap(url -> Observable.create(new WearHttpObservable(this, url))).observeOn(mainThread()).subscribeOn(mainThread()).subscribe(jsonString -> {
-            try {
-                final JSONArray photosArray = new JSONObject(jsonString).getJSONObject("photos").getJSONArray("photo");
-                Log.d(TAG, "photoArray" + photosArray.length() + photosArray);
-                if (photosArray.length() == 0) {
-                    Toast.makeText(WatchFaceService.this, "Photo not found", Toast.LENGTH_LONG).show();
+        GoogleApiClientObservable.connection(this)
+                .flatMap((apiClient) -> GoogleApiClientObservable.location(apiClient))
+                .map(location -> {
+                    int range = new WearSharedPreference(this).get(getString(R.string.key_preference_search_range), getResources().getInteger(R.integer.search_range_default));
+                    return "https://api.flickr.com/services/rest/?method=flickr.photos.search&group_id=1463451@N25&api_key=" + BuildConfig.FLICKR_API_KEY + "&license=1%2C2%2C3%2C4%2C5%2C6&lat=" + location.getLatitude() + "&lon=" + location.getLongitude() + "&radius=" + range + "&extras=url_n,url_l&per_page=30&format=json&nojsoncallback=1";
+                }).flatMap(url -> GoogleApiClientObservable.fetchText(this, url))
+                .observeOn(mainThread())
+                .subscribeOn(mainThread())
+                .subscribe(jsonString -> {
+                    applyView(jsonString);
+                }, e -> {
                     floatingActionBarManager.stopRefresh();
-                    return;
-                }
-                final int nextIndex = new Random().nextInt(photosArray.length());
-                String photoUrl = photosArray.getJSONObject(nextIndex).getString("url_n").toString();
-
-                Log.d(TAG, "str:" + photoUrl);
-                getAndSettingPhotoBitmap(photoUrl);
-
-                largePhotoUrl = photosArray.getJSONObject(nextIndex).getString("url_l").toString();
-                photoTitle = photosArray.getJSONObject(nextIndex).getString("title").toString();
-
-            } catch (JSONException e) {
-                Log.d(TAG, "json" + jsonString);
-                e.printStackTrace();
-                floatingActionBarManager.stopRefresh();
-            }
-        },e->{
-            floatingActionBarManager.stopRefresh();
-            e.printStackTrace();
-        });
+                    e.printStackTrace();
+                });
     }
 
-    public void getAndSettingPhotoBitmap(String url) {
-        new WearGetImage(this).get(url, new WearGetImage.WearGetCallBack() {
-            @Override
-            public void onGet(Bitmap bitmap) {
-                WatchFaceService.this.bitmap = bitmap;
-                engine.invalidate();
-                settingPhotoTime = System.currentTimeMillis();
+    private void applyView(String jsonString) {
+        try {
+            final JSONArray photosArray = new JSONObject(jsonString).getJSONObject("photos").getJSONArray("photo");
+            Log.d(TAG, "photoArray" + photosArray.length() + photosArray);
+            if (photosArray.length() == 0) {
+                Toast.makeText(WatchFaceService.this, "Photo not found", Toast.LENGTH_LONG).show();
                 floatingActionBarManager.stopRefresh();
-
-                savePhotoUrl(photoTitle, largePhotoUrl);
+                return;
             }
+            final int nextIndex = new Random().nextInt(photosArray.length());
+            String photoUrl = photosArray.getJSONObject(nextIndex).getString("url_n").toString();
 
-            @Override
-            public void onFail(Exception e) {
-                e.printStackTrace();
-                Toast.makeText(WatchFaceService.this, "Can't get photo.Please retry later.", Toast.LENGTH_LONG).show();
-                floatingActionBarManager.problemStopRefresh();
-            }
-        }, 50);
+            Log.d(TAG, "str:" + photoUrl);
+            fetchAndApplyPhotoBitmap(photoUrl);
+
+            largePhotoUrl = photosArray.getJSONObject(nextIndex).getString("url_l").toString();
+            photoTitle = photosArray.getJSONObject(nextIndex).getString("title").toString();
+
+        } catch (JSONException e) {
+            Log.d(TAG, "json" + jsonString);
+            e.printStackTrace();
+            floatingActionBarManager.stopRefresh();
+        }
+    }
+
+    public void fetchAndApplyPhotoBitmap(String url) {
+        GoogleApiClientObservable.fetchImage(this, url, 50).subscribe(bitmap1 -> {
+            WatchFaceService.this.bitmap = bitmap1;
+            engine.invalidate();
+            beforeRefreshTime = System.currentTimeMillis();
+            floatingActionBarManager.stopRefresh();
+
+            savePhotoUrl(photoTitle, largePhotoUrl);
+        }, throwable -> {
+            throwable.printStackTrace();
+            Toast.makeText(WatchFaceService.this, "Can't get photo.Please retry later.", Toast.LENGTH_LONG).show();
+            floatingActionBarManager.problemStopRefresh();
+        });
 
     }
 

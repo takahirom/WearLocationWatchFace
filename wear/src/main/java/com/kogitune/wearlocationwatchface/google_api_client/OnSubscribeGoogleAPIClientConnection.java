@@ -1,4 +1,4 @@
-package com.kogitune.wearlocationwatchface;
+package com.kogitune.wearlocationwatchface.google_api_client;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -14,12 +14,12 @@ import rx.Subscriber;
 /**
  * Created by takam on 2015/01/29.
  */
-public class GoogleAPIClientConnectionObservable implements Observable.OnSubscribe<GoogleApiClient>, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class OnSubscribeGoogleAPIClientConnection implements Observable.OnSubscribe<GoogleApiClient>, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private final GoogleApiClient googleAPIClient;
     private Subscriber<? super GoogleApiClient> subscriber;
 
-    public GoogleAPIClientConnectionObservable(Context context){
+    public OnSubscribeGoogleAPIClientConnection(Context context){
         googleAPIClient = new GoogleApiClient.Builder(context)
                 .addApi(LocationServices.API)
                 .addConnectionCallbacks(this)

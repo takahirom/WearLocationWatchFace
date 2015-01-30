@@ -1,4 +1,4 @@
-package com.kogitune.wearlocationwatchface;
+package com.kogitune.wearlocationwatchface.google_api_client;
 
 
 import android.content.Context;
@@ -11,11 +11,11 @@ import rx.Subscriber;
 /**
  * Created by takam on 2015/01/30.
  */
-public class WearHttpObservable implements Observable.OnSubscribe<String> {
+public class OnSubscribeWearHttpText implements Observable.OnSubscribe<String> {
     private final WearGetText wearGetText;
     private final String url;
 
-    public WearHttpObservable(Context context,String url){
+    public OnSubscribeWearHttpText(Context context, String url){
         wearGetText = new WearGetText(context);
         this.url = url;
     }
