@@ -20,7 +20,6 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.kogitune.wearlocationwatchface.google_api_client.GoogleApiClientObservable;
-import com.kogitune.wearlocationwatchface.google_api_client.OnSubscribeLocation;
 import com.kogitune.wearsharedpreference.WearSharedPreference;
 
 import org.json.JSONArray;
@@ -114,7 +113,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
                 final int bigTextSize = 72;
                 whiteMediumFontPaint.setTextSize(mediumTextSize);
                 whiteBigFontPaint.setTextSize(bigTextSize);
-                helplesslyShow(canvas, whiteMediumFontPaint, whiteBigFontPaint);
+                helplesslyShowText(canvas, whiteMediumFontPaint, whiteBigFontPaint);
                 return;
             }
 
@@ -125,6 +124,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
             whiteMediumFontPaint.setTextSize(layoutCalc.getMediumTextSize());
 
             if (drawingBitmap != null) {
+                // already have bitmap draw for animation background
                 Paint paint = new Paint();
                 WatchFaceLayoutCalculator drawingCalc = new WatchFaceLayoutCalculator();
                 drawingCalc.calc(res, drawingBitmap, wearRect, getPeekCardPosition().top);
@@ -225,7 +225,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
         }
 
 
-        private void helplesslyShow(Canvas canvas, Paint whiteMediumPaint, Paint whiteBigPaint) {
+        private void helplesslyShowText(Canvas canvas, Paint whiteMediumPaint, Paint whiteBigPaint) {
             drawCenterText(canvas, whiteBigPaint, timeFormat.format(new Date()), 0);
             canvas.drawText(dateFormat.format(new Date()), 20, 0, whiteMediumPaint);
         }
@@ -264,16 +264,15 @@ public class WatchFaceService extends CanvasWatchFaceService {
     public void startRefresh() {
         floatingActionBarManager.startRefresh();
         GoogleApiClientObservable.connection(this)
-                .flatMap((apiClient) -> GoogleApiClientObservable.location(apiClient))
+                .flatMap(GoogleApiClientObservable::location)
                 .map(location -> {
                     int range = new WearSharedPreference(this).get(getString(R.string.key_preference_search_range), getResources().getInteger(R.integer.search_range_default));
                     return "https://api.flickr.com/services/rest/?method=flickr.photos.search&group_id=1463451@N25&api_key=" + BuildConfig.FLICKR_API_KEY + "&license=1%2C2%2C3%2C4%2C5%2C6&lat=" + location.getLatitude() + "&lon=" + location.getLongitude() + "&radius=" + range + "&extras=url_n,url_l&per_page=30&format=json&nojsoncallback=1";
                 }).flatMap(url -> GoogleApiClientObservable.fetchText(this, url))
                 .observeOn(mainThread())
                 .subscribeOn(mainThread())
-                .subscribe(jsonString -> {
-                    applyView(jsonString);
-                }, e -> {
+                .subscribe(this::applyView,
+                e -> {
                     floatingActionBarManager.stopRefresh();
                     e.printStackTrace();
                 });
