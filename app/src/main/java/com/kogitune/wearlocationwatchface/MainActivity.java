@@ -1,8 +1,12 @@
 package com.kogitune.wearlocationwatchface;
 
+import android.app.DownloadManager;
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.graphics.Palette;
@@ -23,6 +27,8 @@ import com.kogitune.wearlocationwatchface.util.UIUtils;
 import com.kogitune.wearlocationwatchface.widget.CheckableFrameLayout;
 import com.kogitune.wearlocationwatchface.widget.ObservableScrollView;
 import com.kogitune.wearsharedpreference.WearSharedPreference;
+
+import java.io.File;
 
 
 public class MainActivity extends ActionBarActivity implements ObservableScrollView.Callbacks {
@@ -65,6 +71,8 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
             public void onClick(View view) {
                 boolean starred = !mStarred;
                 showStarred(starred, true);
+                String beforePhotoUrl = new WearSharedPreference(MainActivity.this).get(getString(R.string.key_preference_photo_url), "");
+                downloadFile(beforePhotoUrl);
             }
         });
 
@@ -134,7 +142,7 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         lp = beforePhoto.getLayoutParams();
         if (lp.height != mPhotoHeightPixels) {
             lp.height = mPhotoHeightPixels;
-            beforePhoto.setLayoutParams(lp);
+            //beforePhoto.setLayoutParams(lp);
         }
 
         ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams)
@@ -225,6 +233,21 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
 
         // Move background photo (parallax effect)
         beforePhoto.setTranslationY(scrollY * 0.5f);
+    }
+
+    public void downloadFile(String url) {
+        DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+
+        Uri downloadUri = Uri.parse(url);
+        DownloadManager.Request request = new DownloadManager.Request(
+                downloadUri);
+
+        request.setAllowedNetworkTypes(
+                DownloadManager.Request.NETWORK_WIFI
+                        | DownloadManager.Request.NETWORK_MOBILE);
+
+        downloadManager.enqueue(request);
 
     }
+
 }
