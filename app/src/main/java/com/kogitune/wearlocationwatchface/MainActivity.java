@@ -2,16 +2,18 @@ package com.kogitune.wearlocationwatchface;
 
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -28,7 +30,8 @@ import com.kogitune.wearlocationwatchface.widget.CheckableFrameLayout;
 import com.kogitune.wearlocationwatchface.widget.ObservableScrollView;
 import com.kogitune.wearsharedpreference.WearSharedPreference;
 
-import java.io.File;
+import rx.android.content.ContentObservable;
+import rx.functions.Action1;
 
 
 public class MainActivity extends ActionBarActivity implements ObservableScrollView.Callbacks {
@@ -72,7 +75,7 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
                 boolean starred = !mStarred;
                 showStarred(starred, true);
                 String beforePhotoUrl = new WearSharedPreference(MainActivity.this).get(getString(R.string.key_preference_photo_url), "");
-                downloadFile(beforePhotoUrl);
+                downloadAndOpen(beforePhotoUrl);
             }
         });
 
@@ -156,7 +159,6 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
     }
 
 
-
     private void showStarred(boolean starred, boolean allowAnimate) {
         mStarred = starred;
         mFabButton.setChecked(mStarred, allowAnimate);
@@ -235,8 +237,8 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         beforePhoto.setTranslationY(scrollY * 0.5f);
     }
 
-    public void downloadFile(String url) {
-        DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+    public void downloadAndOpen(String url) {
+        final DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
 
         Uri downloadUri = Uri.parse(url);
         DownloadManager.Request request = new DownloadManager.Request(
@@ -246,7 +248,27 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
                 DownloadManager.Request.NETWORK_WIFI
                         | DownloadManager.Request.NETWORK_MOBILE);
 
-        downloadManager.enqueue(request);
+        final long downloadId = downloadManager.enqueue(request);
+        ContentObservable.fromBroadcast(this, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)).subscribe(new Action1<Intent>() {
+            @Override
+            public void call(Intent intent) {
+                long referenceId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+                if (downloadId != referenceId) {
+                    return;
+                }
+
+                Intent openFileIntent = new Intent();
+                openFileIntent.setAction(Intent.ACTION_VIEW);
+                openFileIntent.setDataAndType(downloadManager.getUriForDownloadedFile(downloadId), "image/*");
+                startActivity(openFileIntent);
+
+                Toast toast = Toast.makeText(MainActivity.this,
+                        "Downloading of data just finished", Toast.LENGTH_LONG);
+                toast.setGravity(Gravity.TOP, 25, 400);
+                toast.show();
+
+            }
+        });
 
     }
 
