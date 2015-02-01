@@ -33,17 +33,16 @@ import com.kogitune.wearsharedpreference.WearSharedPreference;
 import rx.android.content.ContentObservable;
 import rx.functions.Action1;
 
-
 public class MainActivity extends ActionBarActivity implements ObservableScrollView.Callbacks {
 
     private static final String TAG = "MainActivity";
     private Toolbar toolbar;
     private WearSharedPreference wearSharedPreference;
     private ObservableScrollView scrollView;
-    private int mPhotoHeightPixels;
-    private View mHeaderBox;
-    private CheckableFrameLayout mFabButton;
-    private boolean mStarred;
+    private int photoHeightPixels;
+    private View headerBox;
+    private CheckableFrameLayout fabButton;
+    private boolean starred;
     private LUtils lUtil;
     private ImageView beforePhoto;
     private boolean hasPhoto = false;
@@ -61,18 +60,18 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         scrollView.addCallbacks(this);
         scrollView.getViewTreeObserver().addOnGlobalLayoutListener(mGlobalLayoutListener);
 
-        mHeaderBox = findViewById(R.id.toolbar);
+        headerBox = findViewById(R.id.toolbar);
         maxHeaderElevation = getResources().getDimensionPixelSize(
                 R.dimen.session_detail_max_header_elevation);
         fabElevation = getResources().getDimensionPixelSize(R.dimen.fab_elevation);
 
         mDetailsContainer = findViewById(R.id.details_container);
 
-        mFabButton = (CheckableFrameLayout) findViewById(R.id.fab_button);
-        mFabButton.setOnClickListener(new View.OnClickListener() {
+        fabButton = (CheckableFrameLayout) findViewById(R.id.fab_button);
+        fabButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                boolean starred = !mStarred;
+                boolean starred = !MainActivity.this.starred;
                 showStarred(starred, true);
                 String beforePhotoUrl = new WearSharedPreference(MainActivity.this).get(getString(R.string.key_preference_photo_url), "");
                 downloadAndOpen(beforePhotoUrl);
@@ -133,25 +132,25 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
     private View mDetailsContainer;
 
     private void recomputePhotoAndScrollingMetrics() {
-        mHeaderHeightPixels = mHeaderBox.getHeight();
+        mHeaderHeightPixels = headerBox.getHeight();
 
-        mPhotoHeightPixels = 0;
+        photoHeightPixels = 0;
         if (hasPhoto) {
-            mPhotoHeightPixels = (int) (beforePhoto.getWidth() / PHOTO_ASPECT_RATIO);
-            mPhotoHeightPixels = Math.min(mPhotoHeightPixels, scrollView.getHeight() * 2 / 3);
+            photoHeightPixels = (int) (beforePhoto.getWidth() / PHOTO_ASPECT_RATIO);
+            photoHeightPixels = Math.min(photoHeightPixels, scrollView.getHeight() * 2 / 3);
         }
 
         ViewGroup.LayoutParams lp;
         lp = beforePhoto.getLayoutParams();
-        if (lp.height != mPhotoHeightPixels) {
-            lp.height = mPhotoHeightPixels;
+        if (lp.height != photoHeightPixels) {
+            lp.height = photoHeightPixels;
             //beforePhoto.setLayoutParams(lp);
         }
 
         ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams)
                 mDetailsContainer.getLayoutParams();
-        if (mlp.topMargin != mHeaderHeightPixels + mPhotoHeightPixels) {
-            mlp.topMargin = mHeaderHeightPixels + mPhotoHeightPixels;
+        if (mlp.topMargin != mHeaderHeightPixels + photoHeightPixels) {
+            mlp.topMargin = mHeaderHeightPixels + photoHeightPixels;
             mDetailsContainer.setLayoutParams(mlp);
         }
 
@@ -160,12 +159,12 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
 
 
     private void showStarred(boolean starred, boolean allowAnimate) {
-        mStarred = starred;
-        mFabButton.setChecked(mStarred, allowAnimate);
+        this.starred = starred;
+        fabButton.setChecked(this.starred, allowAnimate);
 
-        ImageView iconView = (ImageView) mFabButton.findViewById(R.id.add_schedule_icon);
+        ImageView iconView = (ImageView) fabButton.findViewById(R.id.add_schedule_icon);
         lUtil.setOrAnimatePlusCheckIcon(iconView, starred, allowAnimate);
-//        mFabButton.setContentDescription(getString(starred
+//        fabButton.setContentDescription(getString(starred
 //                ? R.string.remove_from_schedule_desc
 //                : R.string.add_to_schedule_desc));
     }
@@ -217,20 +216,20 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
     public void onScrollChanged(int deltaX, int deltaY) {
         int scrollY = scrollView.getScrollY();
 
-        float newTop = Math.max(mPhotoHeightPixels, scrollY);
-        mHeaderBox.setTranslationY(newTop);
-        mFabButton.setTranslationY(newTop + mHeaderHeightPixels
-                - mFabButton.getHeight() / 2);
+        float newTop = Math.max(photoHeightPixels, scrollY);
+        headerBox.setTranslationY(newTop);
+        fabButton.setTranslationY(newTop + mHeaderHeightPixels
+                - fabButton.getHeight() / 2);
 
         float gapFillProgress = 1;
-        if (mPhotoHeightPixels != 0) {
+        if (photoHeightPixels != 0) {
             gapFillProgress = Math.min(Math.max(UIUtils.getProgress(scrollY,
                     0,
-                    mPhotoHeightPixels), 0), 1);
+                    photoHeightPixels), 0), 1);
         }
 
-        ViewCompat.setElevation(mHeaderBox, gapFillProgress * maxHeaderElevation);
-        ViewCompat.setElevation(mFabButton, gapFillProgress * maxHeaderElevation
+        ViewCompat.setElevation(headerBox, gapFillProgress * maxHeaderElevation);
+        ViewCompat.setElevation(fabButton, gapFillProgress * maxHeaderElevation
                 + fabElevation);
 
         // Move background photo (parallax effect)
