@@ -38,7 +38,8 @@ public class WatchFaceService extends CanvasWatchFaceService {
     private Bitmap drawingBitmap = null;
     private Engine engine;
     SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd");
-    SimpleDateFormat hourFormat = new SimpleDateFormat("HH:mm");
+    SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+    SimpleDateFormat hourFormat = new SimpleDateFormat("HH:");
     SimpleDateFormat minuteFormat = new SimpleDateFormat("mm");
     public long beforeRefreshTime;
     private static final int INTERVAL_SETTING_PHOTO = 60 * 60 * 1000;
@@ -151,12 +152,19 @@ public class WatchFaceService extends CanvasWatchFaceService {
 
             // draw time
             if (layoutCalc.isCenterTimeText()) {
-                Rect drawRect = drawCenterText(canvas, whiteBigFontPaint, hourFormat.format(new Date()), layoutCalc.getTimeTextTop());
+                final Paint transparentPaint = new Paint(whiteBigFontPaint);
+                transparentPaint.setColor(Color.TRANSPARENT);
+                // draw for just measure size
+                Rect drawRect = drawCenterText(canvas, transparentPaint, timeFormat.format(new Date()), layoutCalc.getTimeTextTop());
+                canvas.drawText(hourFormat.format(new Date()), drawRect.left, drawRect.top, whiteBigFontPaint);
+
                 final Paint bluePaint = new Paint(whiteBigFontPaint);
                 bluePaint.setColor(res.getColor(R.color.floating_button_color));
                 String minute = minuteFormat.format(new Date());
+
                 final Rect minuteRect = new Rect();
                 bluePaint.getTextBounds(minute, 0, minute.length(), minuteRect);
+
                 canvas.drawText(minute, drawRect.right - minuteRect.width(), drawRect.top, bluePaint);
             } else {
                 canvas.drawText(hourFormat.format(new Date()), 20, layoutCalc.getTimeTextTop(), whiteBigFontPaint);
@@ -251,7 +259,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
                 y = height;
             }
             canvas.drawText(text, x, y, paint);
-            return new Rect(x, (int) y, x + bounds.width(), (int) (y + bounds.height()));
+            return new Rect(x, (int) y, x + bounds.width(), (int) (y + bounds.height()) );
         }
 
 
