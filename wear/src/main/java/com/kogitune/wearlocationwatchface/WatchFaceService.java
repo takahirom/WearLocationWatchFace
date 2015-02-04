@@ -126,7 +126,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
             whiteMediumFontPaint.setTextSize(layoutCalc.getMediumTextSize());
 
             if (drawingBitmap != null) {
-                // already have bitmap draw for animation background
+                // already have bitmap . draw for animation background
                 Paint paint = new Paint();
                 WatchFaceLayoutCalculator drawingCalc = new WatchFaceLayoutCalculator();
                 drawingCalc.calc(res, drawingBitmap, wearRect, getPeekCardPosition().top);
@@ -167,8 +167,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
 
                 canvas.drawText(minute, drawRect.right - minuteRect.width(), drawRect.top, bluePaint);
             } else {
-                canvas.drawText(hourFormat.format(new Date()), 20, layoutCalc.getTimeTextTop(), whiteBigFontPaint);
-                canvas.drawText(minuteFormat.format(new Date()), 20, layoutCalc.getTimeTextTop(), whiteBigFontPaint);
+                canvas.drawText(timeFormat.format(new Date()), 20, layoutCalc.getTimeTextTop(), whiteBigFontPaint);
             }
             // draw date
             canvas.drawText(dateFormat.format(new Date()), 20, layoutCalc.getDateTextTop(), whiteMediumFontPaint);
