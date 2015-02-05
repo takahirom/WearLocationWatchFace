@@ -22,6 +22,9 @@ import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.GlideBuilder;
+import com.bumptech.glide.load.DecodeFormat;
+import com.bumptech.glide.load.engine.cache.DiskLruCacheWrapper;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.kogitune.wearlocationwatchface.util.LUtils;
@@ -35,6 +38,7 @@ import rx.functions.Action1;
 
 public class MainActivity extends ActionBarActivity implements ObservableScrollView.Callbacks {
 
+    private static final int GLIDE_DISK_CACHE_SIZE_IN_BYTES = 128 * 1024 * 1024;
     private static final String TAG = "MainActivity";
     private Toolbar toolbar;
     private WearSharedPreference wearSharedPreference;
@@ -54,6 +58,11 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if (!Glide.isSetup()) {
+            Glide.setup(new GlideBuilder(this)
+                    .setDiskCache(DiskLruCacheWrapper.get(Glide.getPhotoCacheDir(this), GLIDE_DISK_CACHE_SIZE_IN_BYTES))
+                    .setDecodeFormat(DecodeFormat.PREFER_RGB_565));
+        }
         lUtil = LUtils.getInstance(this);
 
         scrollView = (ObservableScrollView) findViewById(R.id.scroll_view);
@@ -65,7 +74,7 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
                 R.dimen.session_detail_max_header_elevation);
         fabElevation = getResources().getDimensionPixelSize(R.dimen.fab_elevation);
 
-        mDetailsContainer = findViewById(R.id.details_container);
+        detailsContainer = findViewById(R.id.details_container);
 
         fabButton = (CheckableFrameLayout) findViewById(R.id.fab_button);
         fabButton.setOnClickListener(new View.OnClickListener() {
@@ -128,11 +137,11 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
             recomputePhotoAndScrollingMetrics();
         }
     };
-    private int mHeaderHeightPixels;
-    private View mDetailsContainer;
+    private int headerHeightPixels;
+    private View detailsContainer;
 
     private void recomputePhotoAndScrollingMetrics() {
-        mHeaderHeightPixels = headerBox.getHeight();
+        headerHeightPixels = headerBox.getHeight();
 
         photoHeightPixels = 0;
         if (hasPhoto) {
@@ -148,10 +157,10 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         }
 
         ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams)
-                mDetailsContainer.getLayoutParams();
-        if (mlp.topMargin != mHeaderHeightPixels + photoHeightPixels) {
-            mlp.topMargin = mHeaderHeightPixels + photoHeightPixels;
-            mDetailsContainer.setLayoutParams(mlp);
+                detailsContainer.getLayoutParams();
+        if (mlp.topMargin != headerHeightPixels + photoHeightPixels) {
+            mlp.topMargin = headerHeightPixels + photoHeightPixels;
+            detailsContainer.setLayoutParams(mlp);
         }
 
         onScrollChanged(0, 0); // trigger scroll handling
@@ -178,6 +187,7 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         Glide.with(this)
                 .load(beforePhotoUrl)
                 .asBitmap()
+                .animate(R.anim.scale)
                 .into(new BitmapImageViewTarget(beforePhoto) {
                     @Override
                     public void onResourceReady(Bitmap bitmap, GlideAnimation anim) {
@@ -218,7 +228,7 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
 
         float newTop = Math.max(photoHeightPixels, scrollY);
         headerBox.setTranslationY(newTop);
-        fabButton.setTranslationY(newTop + mHeaderHeightPixels
+        fabButton.setTranslationY(newTop + headerHeightPixels
                 - fabButton.getHeight() / 2);
 
         float gapFillProgress = 1;
