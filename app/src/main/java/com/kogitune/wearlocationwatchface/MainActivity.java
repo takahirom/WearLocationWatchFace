@@ -33,6 +33,8 @@ import com.kogitune.wearlocationwatchface.widget.CheckableFrameLayout;
 import com.kogitune.wearlocationwatchface.widget.ObservableScrollView;
 import com.kogitune.wearsharedpreference.WearSharedPreference;
 
+import org.adw.library.widgets.discreteseekbar.DiscreteSeekBar;
+
 import rx.android.content.ContentObservable;
 import rx.functions.Action1;
 
@@ -95,24 +97,13 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         setSupportActionBar(toolbar);
 
         setupPhotoAndApplyTheme();
-        SeekBar searchRadiusSeekBar = (SeekBar) findViewById(R.id.search_radius);
+        DiscreteSeekBar searchRadiusSeekBar = (DiscreteSeekBar) findViewById(R.id.search_radius);
         wearSharedPreference = new WearSharedPreference(this);
-        final int radius = wearSharedPreference.get(getString(R.string.key_preference_search_range), getResources().getInteger(R.integer.search_range_default));
-        searchRadiusSeekBar.setProgress(radius);
-        searchRadiusSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            public int startProgress;
-
+        final int firstRadius = wearSharedPreference.get(getString(R.string.key_preference_search_range), getResources().getInteger(R.integer.search_range_default));
+        searchRadiusSeekBar.setProgress(firstRadius);
+        searchRadiusSeekBar.setOnProgressChangeListener(new DiscreteSeekBar.OnProgressChangeListener() {
             @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                this.startProgress = seekBar.getProgress();
-            }
-
-            @Override
-            public void onStopTrackingTouch(final SeekBar seekBar) {
+            public void onProgressChanged(final DiscreteSeekBar seekBar, int value, boolean fromUser) {
                 wearSharedPreference.put(getString(R.string.key_preference_search_range), seekBar.getProgress());
                 wearSharedPreference.sync(new WearSharedPreference.OnSyncListener() {
                     @Override
@@ -122,12 +113,12 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
                     @Override
                     public void onFail(Exception e) {
                         Toast.makeText(MainActivity.this, "Sync failed search radius", Toast.LENGTH_LONG).show();
-                        seekBar.setProgress(startProgress);
+                        seekBar.setProgress(firstRadius);
                     }
                 });
             }
         });
-    }
+       }
 
 
     private ViewTreeObserver.OnGlobalLayoutListener mGlobalLayoutListener
