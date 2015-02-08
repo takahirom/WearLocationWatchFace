@@ -1,6 +1,5 @@
 package com.kogitune.wearlocationwatchface;
 
-import android.animation.Animator;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
@@ -20,7 +19,6 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageView;
-import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -133,26 +131,15 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         photoHeightPixels = 0;
         if (hasPhoto) {
             photoHeightPixels = (int) (beforePhoto.getWidth() / PHOTO_ASPECT_RATIO);
-            photoHeightPixels = Math.min(photoHeightPixels, scrollView.getHeight() * 2 / 3);
         }
 
         ViewGroup.LayoutParams lp;
         lp = beforePhoto.getLayoutParams();
         if (lp.height != photoHeightPixels) {
             lp.height = photoHeightPixels;
-            //beforePhoto.setLayoutParams(lp);
+            beforePhoto.setLayoutParams(lp);
+            startCircularRevealAnimation(photoHeightPixels);
         }
-        // get the final radius for the clipping circle
-        int finalRadius = Math.max(beforePhoto.getWidth(), beforePhoto.getHeight());
-
-        int cx = (beforePhoto.getLeft() + beforePhoto.getRight()) / 2;
-        int cy = (beforePhoto.getTop() + beforePhoto.getBottom()) / 2;
-
-        SupportAnimator animator =
-                ViewAnimationUtils.createCircularReveal(beforePhoto, cx, cy, 0, finalRadius);
-        animator.setInterpolator(new AccelerateDecelerateInterpolator());
-        animator.setDuration(1500);
-        animator.start();
 
         ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams)
                 detailsContainer.getLayoutParams();
@@ -186,38 +173,46 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         Glide.with(this)
                 .load(beforePhotoUrl)
                 .asBitmap()
-                .animate(R.anim.scale)
                 .into(new BitmapImageViewTarget(beforePhoto) {
                     @Override
                     public void onResourceReady(Bitmap bitmap, GlideAnimation anim) {
                         super.onResourceReady(bitmap, anim);
 
                         hasPhoto = true;
-                        Palette.generateAsync(bitmap, new Palette.PaletteAsyncListener() {
-                            @Override
-                            public void onGenerated(Palette palette) {
-                                applyTheme(palette);
-                            }
-                        });
+                        Palette.generateAsync(bitmap, MainActivity.this::applyTheme);
                     }
                 });
     }
 
-    private void applyTheme(Palette generate) {
-        if (generate == null) {
+    private void applyTheme(Palette palette) {
+        if (palette == null) {
             return;
         }
-        final Palette.Swatch darkVibrantSwatch = generate.getDarkVibrantSwatch();
+        final Palette.Swatch darkVibrantSwatch = palette.getDarkVibrantSwatch();
         if (darkVibrantSwatch != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 getWindow().setStatusBarColor(darkVibrantSwatch.getRgb());
             }
         }
-        final Palette.Swatch vibrantSwatch = generate.getVibrantSwatch();
+        final Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
         if (vibrantSwatch != null) {
             toolbar.setBackgroundColor(vibrantSwatch.getRgb());
             toolbar.setTitleTextColor(vibrantSwatch.getTitleTextColor());
         }
+    }
+
+    private void startCircularRevealAnimation(int newHeight) {
+        // get the final radius for the clipping circle
+        int finalRadius = Math.max(beforePhoto.getWidth(), newHeight);
+
+        int cx = (beforePhoto.getLeft() + beforePhoto.getRight()) / 2;
+        int cy = (beforePhoto.getTop() * 2 + newHeight) / 2;
+
+        SupportAnimator animator =
+                ViewAnimationUtils.createCircularReveal(beforePhoto, cx, cy, 0, finalRadius);
+        animator.setInterpolator(new AccelerateDecelerateInterpolator());
+        animator.setDuration(1500);
+        animator.start();
     }
 
 
