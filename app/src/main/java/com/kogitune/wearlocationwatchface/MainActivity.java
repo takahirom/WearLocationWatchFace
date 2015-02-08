@@ -44,6 +44,7 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
 
     private static final int GLIDE_DISK_CACHE_SIZE_IN_BYTES = 128 * 1024 * 1024;
     private static final String TAG = "MainActivity";
+    private static final float PHOTO_ASPECT_RATIO = 1.5f;
     private Toolbar toolbar;
     private WearSharedPreference wearSharedPreference;
     private ObservableScrollView scrollView;
@@ -54,9 +55,12 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
     private LUtils lUtil;
     private ImageView beforePhoto;
     private boolean hasPhoto = false;
-    private static final float PHOTO_ASPECT_RATIO = 1.5f;
     private int maxHeaderElevation;
     private int fabElevation;
+    private int headerHeightPixels;
+    private View detailsContainer;
+    private ViewTreeObserver.OnGlobalLayoutListener mGlobalLayoutListener
+            = this::recomputePhotoAndScrollingMetrics;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,14 +85,13 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         detailsContainer = findViewById(R.id.details_container);
 
         fabButton = (CheckableFrameLayout) findViewById(R.id.fab_button);
-        fabButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                boolean starred = !MainActivity.this.starred;
-                showStarred(starred, true);
+        fabButton.setOnClickListener(view -> {
+            if (!starred) {
                 String beforePhotoUrl = new WearSharedPreference(MainActivity.this).get(getString(R.string.key_preference_photo_url), "");
                 downloadAndOpen(beforePhotoUrl);
             }
+            boolean starred1 = !MainActivity.this.starred;
+            showStarred(starred1, true);
         });
 
 
@@ -117,13 +120,7 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
                 }
             });
         });
-       }
-
-
-    private ViewTreeObserver.OnGlobalLayoutListener mGlobalLayoutListener
-            = this::recomputePhotoAndScrollingMetrics;
-    private int headerHeightPixels;
-    private View detailsContainer;
+    }
 
     private void recomputePhotoAndScrollingMetrics() {
         headerHeightPixels = headerBox.getHeight();
