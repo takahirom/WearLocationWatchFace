@@ -10,6 +10,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/library" />
+            <option value="$PROJECT_DIR$/library/circualreveal" />
             <option value="$PROJECT_DIR$/library/discreteSeekBar" />
             <option value="$PROJECT_DIR$/wear" />
           </set>

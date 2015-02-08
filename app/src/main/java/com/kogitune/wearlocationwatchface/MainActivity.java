@@ -1,5 +1,6 @@
 package com.kogitune.wearlocationwatchface;
 
+import android.animation.Animator;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
@@ -17,6 +18,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Toast;
@@ -35,6 +37,8 @@ import com.kogitune.wearsharedpreference.WearSharedPreference;
 
 import org.adw.library.widgets.discreteseekbar.DiscreteSeekBar;
 
+import io.codetail.animation.SupportAnimator;
+import io.codetail.animation.ViewAnimationUtils;
 import rx.android.content.ContentObservable;
 import rx.functions.Action1;
 
@@ -101,33 +105,25 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         wearSharedPreference = new WearSharedPreference(this);
         final int firstRadius = wearSharedPreference.get(getString(R.string.key_preference_search_range), getResources().getInteger(R.integer.search_range_default));
         searchRadiusSeekBar.setProgress(firstRadius);
-        searchRadiusSeekBar.setOnProgressChangeListener(new DiscreteSeekBar.OnProgressChangeListener() {
-            @Override
-            public void onProgressChanged(final DiscreteSeekBar seekBar, int value, boolean fromUser) {
-                wearSharedPreference.put(getString(R.string.key_preference_search_range), seekBar.getProgress());
-                wearSharedPreference.sync(new WearSharedPreference.OnSyncListener() {
-                    @Override
-                    public void onSuccess() {
-                    }
+        searchRadiusSeekBar.setOnProgressChangeListener((seekBar, value, fromUser) -> {
+            wearSharedPreference.put(getString(R.string.key_preference_search_range), seekBar.getProgress());
+            wearSharedPreference.sync(new WearSharedPreference.OnSyncListener() {
+                @Override
+                public void onSuccess() {
+                }
 
-                    @Override
-                    public void onFail(Exception e) {
-                        Toast.makeText(MainActivity.this, "Sync failed search radius", Toast.LENGTH_LONG).show();
-                        seekBar.setProgress(firstRadius);
-                    }
-                });
-            }
+                @Override
+                public void onFail(Exception e) {
+                    Toast.makeText(MainActivity.this, "Sync failed search radius", Toast.LENGTH_LONG).show();
+                    seekBar.setProgress(firstRadius);
+                }
+            });
         });
        }
 
 
     private ViewTreeObserver.OnGlobalLayoutListener mGlobalLayoutListener
-            = new ViewTreeObserver.OnGlobalLayoutListener() {
-        @Override
-        public void onGlobalLayout() {
-            recomputePhotoAndScrollingMetrics();
-        }
-    };
+            = this::recomputePhotoAndScrollingMetrics;
     private int headerHeightPixels;
     private View detailsContainer;
 
@@ -146,6 +142,17 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
             lp.height = photoHeightPixels;
             //beforePhoto.setLayoutParams(lp);
         }
+        // get the final radius for the clipping circle
+        int finalRadius = Math.max(beforePhoto.getWidth(), beforePhoto.getHeight());
+
+        int cx = (beforePhoto.getLeft() + beforePhoto.getRight()) / 2;
+        int cy = (beforePhoto.getTop() + beforePhoto.getBottom()) / 2;
+
+        SupportAnimator animator =
+                ViewAnimationUtils.createCircularReveal(beforePhoto, cx, cy, 0, finalRadius);
+        animator.setInterpolator(new AccelerateDecelerateInterpolator());
+        animator.setDuration(1500);
+        animator.start();
 
         ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams)
                 detailsContainer.getLayoutParams();
@@ -175,6 +182,7 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         if (beforePhotoUrl.length() == 0) {
             return;
         }
+
         Glide.with(this)
                 .load(beforePhotoUrl)
                 .asBitmap()

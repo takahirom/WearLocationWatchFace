@@ -8,7 +8,7 @@
     android:fillViewport="true"
     tools:context=".MainActivity">
 
-    <FrameLayout
+    <io.codetail.widget.RevealFrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -54,6 +54,6 @@
         <!-- FAB -->
         <include layout="@layout/include_add_schedule_fab" />
 
-    </FrameLayout>
+    </io.codetail.widget.RevealFrameLayout>
 
 </com.kogitune.wearlocationwatchface.widget.ObservableScrollView>
