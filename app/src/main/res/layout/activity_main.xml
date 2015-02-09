@@ -42,6 +42,13 @@
                 app:dsb_min="5"
                 app:dsb_max="25"
                 />
+            <android.support.v7.widget.SwitchCompat
+                android:id="@+id/switch_text_accent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Time text accent. "
+                />
         </LinearLayout>
 
         <android.support.v7.widget.Toolbar

@@ -4,6 +4,7 @@ import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
@@ -11,6 +12,7 @@ import android.os.Bundle;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.graphics.Palette;
+import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
@@ -27,6 +29,7 @@ import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.load.engine.cache.DiskLruCacheWrapper;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
+import com.kogitune.wearlocationwatchface.common.OnSubscribeWearSharedPreferences;
 import com.kogitune.wearlocationwatchface.util.LUtils;
 import com.kogitune.wearlocationwatchface.util.UIUtils;
 import com.kogitune.wearlocationwatchface.widget.CheckableFrameLayout;
@@ -37,28 +40,39 @@ import org.adw.library.widgets.discreteseekbar.DiscreteSeekBar;
 
 import io.codetail.animation.SupportAnimator;
 import io.codetail.animation.ViewAnimationUtils;
+import rx.Observable;
+import rx.Subscriber;
 import rx.android.content.ContentObservable;
 import rx.functions.Action1;
 
 public class MainActivity extends ActionBarActivity implements ObservableScrollView.Callbacks {
 
+    // constants
     private static final int GLIDE_DISK_CACHE_SIZE_IN_BYTES = 128 * 1024 * 1024;
     private static final String TAG = "MainActivity";
     private static final float PHOTO_ASPECT_RATIO = 1.5f;
+
+    private WearSharedPreference wearPref;
+    private LUtils lUtil;
+
+    // views
     private Toolbar toolbar;
-    private WearSharedPreference wearSharedPreference;
     private ObservableScrollView scrollView;
     private int photoHeightPixels;
     private View headerBox;
     private CheckableFrameLayout fabButton;
-    private boolean starred;
-    private LUtils lUtil;
     private ImageView beforePhoto;
+    private View detailsContainer;
+
+    // flags
+    private boolean starred;
     private boolean hasPhoto = false;
+
+    // sizes
     private int maxHeaderElevation;
     private int fabElevation;
     private int headerHeightPixels;
-    private View detailsContainer;
+
     private ViewTreeObserver.OnGlobalLayoutListener mGlobalLayoutListener
             = this::recomputePhotoAndScrollingMetrics;
 
@@ -72,6 +86,18 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
                     .setDecodeFormat(DecodeFormat.PREFER_RGB_565));
         }
         lUtil = LUtils.getInstance(this);
+        wearPref = new WearSharedPreference(this);
+
+        setupViews();
+    }
+
+    private void setupViews() {
+        Resources res = getResources();
+
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle(new WearSharedPreference(this).get(getString(R.string.key_preference_photo_title), ""));
+        toolbar.getMenu().clear();
+        setSupportActionBar(toolbar);
 
         scrollView = (ObservableScrollView) findViewById(R.id.scroll_view);
         scrollView.addCallbacks(this);
@@ -90,25 +116,44 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
                 String beforePhotoUrl = new WearSharedPreference(MainActivity.this).get(getString(R.string.key_preference_photo_url), "");
                 downloadAndOpen(beforePhotoUrl);
             }
-            boolean starred1 = !MainActivity.this.starred;
-            showStarred(starred1, true);
+            boolean starredReverse= !MainActivity.this.starred;
+            showStarred(starredReverse, true);
         });
 
 
         beforePhoto = (ImageView) findViewById(R.id.beforePhoto);
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        toolbar.setTitle(new WearSharedPreference(this).get(getString(R.string.key_preference_photo_title), ""));
-        toolbar.getMenu().clear();
-        setSupportActionBar(toolbar);
 
         setupPhotoAndApplyTheme();
         DiscreteSeekBar searchRadiusSeekBar = (DiscreteSeekBar) findViewById(R.id.search_radius);
-        wearSharedPreference = new WearSharedPreference(this);
-        final int firstRadius = wearSharedPreference.get(getString(R.string.key_preference_search_range), getResources().getInteger(R.integer.search_range_default));
+
+        final SwitchCompat textAccentSwitch = (SwitchCompat) findViewById(R.id.switch_text_accent);
+        final boolean timeTextAccentEnabled = wearPref.get(getString(R.string.key_preference_time_text_accent), res.getBoolean(R.bool.time_text_accent_default));
+        textAccentSwitch.setChecked(timeTextAccentEnabled);
+        Observable
+                .create(new Observable.OnSubscribe<Boolean>() {
+                    @Override
+                    public void call(Subscriber<? super Boolean> subscriber) {
+                        textAccentSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                            subscriber.onNext(Boolean.valueOf(isChecked));
+                            subscriber.onCompleted();
+                        });
+                    }
+                })
+                .flatMap(b ->
+                        Observable.create(new OnSubscribeWearSharedPreferences(MainActivity.this, getString(R.string.key_preference_time_text_accent), b)))
+                .subscribe((subsucriber)->{}, new Action1<Throwable>() {
+                    @Override
+                    public void call(Throwable throwable) {
+                        Toast.makeText(MainActivity.this, "Sync failed textAccentSwitch", Toast.LENGTH_LONG).show();
+                        throwable.printStackTrace();
+                    }
+                });
+
+        final int firstRadius = wearPref.get(getString(R.string.key_preference_search_range), res.getInteger(R.integer.search_range_default));
         searchRadiusSeekBar.setProgress(firstRadius);
         searchRadiusSeekBar.setOnProgressChangeListener((seekBar, value, fromUser) -> {
-            wearSharedPreference.put(getString(R.string.key_preference_search_range), seekBar.getProgress());
-            wearSharedPreference.sync(new WearSharedPreference.OnSyncListener() {
+            wearPref.put(getString(R.string.key_preference_search_range), seekBar.getProgress());
+            wearPref.sync(new WearSharedPreference.OnSyncListener() {
                 @Override
                 public void onSuccess() {
                 }

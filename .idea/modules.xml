@@ -5,9 +5,11 @@
       <module fileurl="file://$PROJECT_DIR$/WearLocationWatchFace.iml" filepath="$PROJECT_DIR$/WearLocationWatchFace.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/library/circualreveal/circualreveal.iml" filepath="$PROJECT_DIR$/library/circualreveal/circualreveal.iml" />
+      <module fileurl="file://$PROJECT_DIR$/common/common.iml" filepath="$PROJECT_DIR$/common/common.iml" />
       <module fileurl="file://$PROJECT_DIR$/library/discreteSeekBar/discreteSeekBar.iml" filepath="$PROJECT_DIR$/library/discreteSeekBar/discreteSeekBar.iml" />
       <module fileurl="file://$PROJECT_DIR$/library/library.iml" filepath="$PROJECT_DIR$/library/library.iml" />
       <module fileurl="file://$PROJECT_DIR$/wear/wear.iml" filepath="$PROJECT_DIR$/wear/wear.iml" />
+      <module fileurl="file://$PROJECT_DIR$/wearlocationwatchface.common/wearlocationwatchface.common.iml" filepath="$PROJECT_DIR$/wearlocationwatchface.common/wearlocationwatchface.common.iml" />
     </modules>
   </component>
 </project>

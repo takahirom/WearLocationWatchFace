@@ -58,6 +58,7 @@ dependencies {
 
     compile project(':library:discreteSeekBar')
     compile project(':library:circualreveal')
+    compile project(':common')
 
     wearApp project(':wear')
     compile 'com.google.android.gms:play-services-wearable:+'

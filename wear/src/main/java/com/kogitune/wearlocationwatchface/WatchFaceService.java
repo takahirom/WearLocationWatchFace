@@ -97,6 +97,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
 
         @Override
         public void onDraw(final Canvas canvas, final Rect wearRect) {
+            // FIXME: Please clean and high performance code
             final Resources res = getResources();
             if (drawingBitmap != bitmap) {
                 state = State.DRAWING;
@@ -158,14 +159,18 @@ public class WatchFaceService extends CanvasWatchFaceService {
                 Rect drawRect = drawCenterText(canvas, transparentPaint, timeFormat.format(new Date()), layoutCalc.getTimeTextTop());
                 canvas.drawText(hourFormat.format(new Date()), drawRect.left, drawRect.top, whiteBigFontPaint);
 
-                final Paint bluePaint = new Paint(whiteBigFontPaint);
-                bluePaint.setColor(res.getColor(R.color.floating_button_color));
+                final Paint minutePaint = new Paint(whiteBigFontPaint);
+
+                final boolean isTextColorAccent = new WearSharedPreference(WatchFaceService.this).get(getString(R.string.key_preference_time_text_accent), res.getBoolean(R.bool.time_text_accent_default));
+                if (isTextColorAccent) {
+                    minutePaint.setColor(res.getColor(R.color.floating_button_color));
+                }
                 String minute = minuteFormat.format(new Date());
 
                 final Rect minuteRect = new Rect();
-                bluePaint.getTextBounds(minute, 0, minute.length(), minuteRect);
+                minutePaint.getTextBounds(minute, 0, minute.length(), minuteRect);
 
-                canvas.drawText(minute, drawRect.right - minuteRect.width(), drawRect.top, bluePaint);
+                canvas.drawText(minute, drawRect.right - minuteRect.width(), drawRect.top, minutePaint);
             } else {
                 canvas.drawText(timeFormat.format(new Date()), 20, layoutCalc.getTimeTextTop(), whiteBigFontPaint);
             }
