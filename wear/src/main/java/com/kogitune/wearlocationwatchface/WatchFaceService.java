@@ -37,10 +37,10 @@ public class WatchFaceService extends CanvasWatchFaceService {
     private Bitmap bitmap = null;
     private Bitmap drawingBitmap = null;
     private Engine engine;
-    SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd");
-    SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
-    SimpleDateFormat hourFormat = new SimpleDateFormat("HH:");
-    SimpleDateFormat minuteFormat = new SimpleDateFormat("mm");
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd");
+    private SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+    private SimpleDateFormat hourFormat = new SimpleDateFormat("HH:");
+    private SimpleDateFormat minuteFormat = new SimpleDateFormat("mm");
     public long beforeRefreshTime;
     private static final int INTERVAL_SETTING_PHOTO = 60 * 60 * 1000;
     private FloatingActionBarManager floatingActionBarManager;

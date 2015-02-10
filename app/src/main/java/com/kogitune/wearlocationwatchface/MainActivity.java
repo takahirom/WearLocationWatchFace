@@ -116,7 +116,7 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
                 String beforePhotoUrl = new WearSharedPreference(MainActivity.this).get(getString(R.string.key_preference_photo_url), "");
                 downloadAndOpen(beforePhotoUrl);
             }
-            boolean starredReverse= !MainActivity.this.starred;
+            boolean starredReverse = !MainActivity.this.starred;
             showStarred(starredReverse, true);
         });
 
@@ -141,12 +141,10 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
                 })
                 .flatMap(b ->
                         Observable.create(new OnSubscribeWearSharedPreferences(MainActivity.this, getString(R.string.key_preference_time_text_accent), b)))
-                .subscribe((subsucriber)->{}, new Action1<Throwable>() {
-                    @Override
-                    public void call(Throwable throwable) {
-                        Toast.makeText(MainActivity.this, "Sync failed textAccentSwitch", Toast.LENGTH_LONG).show();
-                        throwable.printStackTrace();
-                    }
+                .subscribe((subscriber) -> {
+                }, throwable -> {
+                    Toast.makeText(MainActivity.this, "Sync failed textAccentSwitch", Toast.LENGTH_LONG).show();
+                    throwable.printStackTrace();
                 });
 
         final int firstRadius = wearPref.get(getString(R.string.key_preference_search_range), res.getInteger(R.integer.search_range_default));
@@ -282,7 +280,7 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         beforePhoto.setTranslationY(scrollY * 0.5f);
     }
 
-    public void downloadAndOpen(String url) {
+    protected void downloadAndOpen(String url) {
         final DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
 
         Uri downloadUri = Uri.parse(url);
