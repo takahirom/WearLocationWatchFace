@@ -37,6 +37,6 @@ public class OnSubscribeWearHttpImage implements Observable.OnSubscribe<Bitmap> 
                 subscriber.onError(e);
                 subscriber.onCompleted();
             }
-        });
+        }, timeout);
     }
 }
