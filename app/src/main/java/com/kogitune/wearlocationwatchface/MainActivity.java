@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -61,7 +63,7 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
     private int photoHeightPixels;
     private View headerBox;
     private CheckableFrameLayout fabButton;
-    private ImageView beforePhoto;
+    private ImageView photoImageView;
     private View detailsContainer;
 
     // flags
@@ -73,8 +75,8 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
     private int fabElevation;
     private int headerHeightPixels;
 
-    private ViewTreeObserver.OnGlobalLayoutListener mGlobalLayoutListener
-            = this::recomputePhotoAndScrollingMetrics;
+    private ViewTreeObserver.OnGlobalLayoutListener mGlobalLayoutListener = this::recomputePhotoAndScrollingMetrics;
+    private int oldPhotoHashCode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,7 +123,7 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         });
 
 
-        beforePhoto = (ImageView) findViewById(R.id.beforePhoto);
+        photoImageView = (ImageView) findViewById(R.id.beforePhoto);
 
         setupPhotoAndApplyTheme();
         DiscreteSeekBar searchRadiusSeekBar = (DiscreteSeekBar) findViewById(R.id.search_radius);
@@ -170,15 +172,17 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
 
         photoHeightPixels = 0;
         if (hasPhoto) {
-            photoHeightPixels = (int) (beforePhoto.getWidth() / PHOTO_ASPECT_RATIO);
+            photoHeightPixels = (int) (photoImageView.getWidth() / PHOTO_ASPECT_RATIO);
         }
 
         ViewGroup.LayoutParams lp;
-        lp = beforePhoto.getLayoutParams();
+        lp = photoImageView.getLayoutParams();
         if (lp.height != photoHeightPixels) {
             lp.height = photoHeightPixels;
-            beforePhoto.setLayoutParams(lp);
-            startCircularRevealAnimation(photoHeightPixels);
+            photoImageView.setLayoutParams(lp);
+        }
+        if(hasPhoto) {
+            startAnimationIfImageChanged();
         }
 
         ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams)
@@ -189,6 +193,18 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         }
 
         onScrollChanged(0, 0); // trigger scroll handling
+    }
+
+    private void startAnimationIfImageChanged() {
+        Drawable drawable = photoImageView.getDrawable();
+        if (drawable == null) {
+            return;
+        }
+        final int newPhotoHashCode = drawable.hashCode();
+        if(oldPhotoHashCode != newPhotoHashCode) {
+            startCircularRevealAnimation(photoHeightPixels);
+        }
+        oldPhotoHashCode = newPhotoHashCode;
     }
 
 
@@ -210,10 +226,14 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
             return;
         }
 
+        setPhotoAndApplyTheme(beforePhotoUrl);
+    }
+
+    private void setPhotoAndApplyTheme(String beforePhotoUrl) {
         Glide.with(this)
                 .load(beforePhotoUrl)
                 .asBitmap()
-                .into(new BitmapImageViewTarget(beforePhoto) {
+                .into(new BitmapImageViewTarget(photoImageView) {
                     @Override
                     public void onResourceReady(Bitmap bitmap, GlideAnimation anim) {
                         super.onResourceReady(bitmap, anim);
@@ -243,13 +263,13 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
 
     private void startCircularRevealAnimation(int newHeight) {
         // get the final radius for the clipping circle
-        int finalRadius = Math.max(beforePhoto.getWidth(), newHeight);
+        int finalRadius = Math.max(photoImageView.getWidth(), newHeight);
 
-        int cx = (beforePhoto.getLeft() + beforePhoto.getRight()) / 2;
-        int cy = (beforePhoto.getTop() * 2 + newHeight) / 2;
+        int cx = (photoImageView.getLeft() + photoImageView.getRight()) / 2;
+        int cy = (photoImageView.getTop() * 2 + newHeight) / 2;
 
         SupportAnimator animator =
-                ViewAnimationUtils.createCircularReveal(beforePhoto, cx, cy, 0, finalRadius);
+                ViewAnimationUtils.createCircularReveal(photoImageView, cx, cy, 0, finalRadius);
         animator.setInterpolator(new AccelerateDecelerateInterpolator());
         animator.setDuration(1500);
         animator.start();
@@ -276,8 +296,8 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         ViewCompat.setElevation(fabButton, gapFillProgress * maxHeaderElevation
                 + fabElevation);
 
-        // Move background photo (parallax effect)
-        beforePhoto.setTranslationY(scrollY * 0.5f);
+        // Move background photoImageView (parallax effect)
+        photoImageView.setTranslationY(scrollY * 0.5f);
     }
 
     protected void downloadAndOpen(String url) {
@@ -315,4 +335,24 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
 
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        wearPref.registerOnPreferenceChangeListener(new WearSharedPreference.OnPreferenceChangeListener() {
+            @Override
+            public void onPreferenceChange(WearSharedPreference preference, String key, Bundle bundle) {
+                if (!TextUtils.equals(getString(R.string.key_preference_photo_url), key)) {
+                    return;
+                }
+                final String photoUrl = bundle.getString(key);
+                setPhotoAndApplyTheme(photoUrl);
+            }
+        });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        wearPref.unregisterOnPreferenceChangeListener();
+    }
 }
