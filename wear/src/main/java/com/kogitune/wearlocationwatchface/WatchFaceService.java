@@ -71,11 +71,21 @@ public class WatchFaceService extends CanvasWatchFaceService {
     class WatchFaceEngine extends Engine {
         private SurfaceHolder holder;
         private int canvasState = -1;
+        private Paint whiteMediumFontPaint;
+        private Paint whiteBigFontPaint;
 
         @Override
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
             this.holder = holder;
+
+            whiteMediumFontPaint = new Paint();
+            whiteMediumFontPaint.setFilterBitmap(true);
+            whiteMediumFontPaint.setAntiAlias(true);
+            whiteMediumFontPaint.setColor(Color.WHITE);
+            whiteBigFontPaint = new Paint(whiteMediumFontPaint);
+
+
             setWatchFaceStyle(
                     new WatchFaceStyle.Builder(WatchFaceService.this)
                             .setCardPeekMode(WatchFaceStyle.PEEK_MODE_SHORT)
@@ -105,11 +115,6 @@ public class WatchFaceService extends CanvasWatchFaceService {
 
             //canvas.drawColor(0, PorterDuff.Mode.CLEAR);
 
-            final Paint whiteMediumFontPaint = new Paint();
-            whiteMediumFontPaint.setFilterBitmap(true);
-            whiteMediumFontPaint.setAntiAlias(true);
-            whiteMediumFontPaint.setColor(Color.WHITE);
-            final Paint whiteBigFontPaint = new Paint(whiteMediumFontPaint);
 
             if (bitmap == null) {
                 final int mediumTextSize = 24;
