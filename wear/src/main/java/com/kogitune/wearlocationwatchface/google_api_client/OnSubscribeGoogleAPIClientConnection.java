@@ -14,38 +14,35 @@ import rx.Subscriber;
 /**
  * Created by takam on 2015/01/29.
  */
-public class OnSubscribeGoogleAPIClientConnection implements Observable.OnSubscribe<GoogleApiClient>, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
-
+public class OnSubscribeGoogleAPIClientConnection implements Observable.OnSubscribe<GoogleApiClient> {
     private final GoogleApiClient googleAPIClient;
-    private Subscriber<? super GoogleApiClient> subscriber;
 
-    public OnSubscribeGoogleAPIClientConnection(Context context){
+    public OnSubscribeGoogleAPIClientConnection(Context context) {
         googleAPIClient = new GoogleApiClient.Builder(context)
                 .addApi(LocationServices.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
                 .build();
     }
 
     @Override
     public void call(Subscriber<? super GoogleApiClient> subscriber) {
-        Log.d("ApiConnection", "call");
-        this.subscriber = subscriber;
+        googleAPIClient.registerConnectionCallbacks(new GoogleApiClient.ConnectionCallbacks() {
+            @Override
+            public void onConnected(Bundle bundle) {
+                subscriber.onNext(googleAPIClient);
+            }
+
+            @Override
+            public void onConnectionSuspended(int i) {
+                subscriber.onCompleted();
+            }
+        });
+        googleAPIClient.registerConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
+            @Override
+            public void onConnectionFailed(ConnectionResult connectionResult) {
+                subscriber.onError(new RuntimeException(connectionResult.toString()));
+            }
+        });
         googleAPIClient.connect();
     }
 
-    @Override
-    public void onConnected(Bundle bundle) {
-        subscriber.onNext(googleAPIClient);
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        subscriber.onCompleted();
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult connectionResult) {
-        subscriber.onError(new RuntimeException(connectionResult.toString()));
-    }
 }
