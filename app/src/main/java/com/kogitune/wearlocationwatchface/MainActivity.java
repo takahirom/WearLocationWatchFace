@@ -23,6 +23,8 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -137,7 +139,6 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
                     public void call(Subscriber<? super Boolean> subscriber) {
                         textAccentSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
                             subscriber.onNext(Boolean.valueOf(isChecked));
-                            subscriber.onCompleted();
                         });
                     }
                 })
@@ -145,25 +146,37 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
                         Observable.create(new OnSubscribeWearSharedPreferences(MainActivity.this, getString(R.string.key_preference_time_text_accent), b)))
                 .subscribe((subscriber) -> {
                 }, throwable -> {
-                    Toast.makeText(MainActivity.this, "Sync failed textAccentSwitch", Toast.LENGTH_LONG).show();
                     throwable.printStackTrace();
                 });
 
-        final int firstRadius = wearPref.get(getString(R.string.key_preference_search_range), res.getInteger(R.integer.search_range_default));
+        int firstRadius = wearPref.get(getString(R.string.key_preference_search_range), res.getInteger(R.integer.search_range_default));
         searchRadiusSeekBar.setProgress(firstRadius);
-        searchRadiusSeekBar.setOnProgressChangeListener((seekBar, value, fromUser) -> {
-            wearPref.put(getString(R.string.key_preference_search_range), seekBar.getProgress());
-            wearPref.sync(new WearSharedPreference.OnSyncListener() {
-                @Override
-                public void onSuccess() {
-                }
+        searchRadiusSeekBar.setOnProgressChangeListener(new DiscreteSeekBar.OnProgressChangeListener() {
+            private int startRadius;
 
-                @Override
-                public void onFail(Exception e) {
-                    Toast.makeText(MainActivity.this, "Sync failed search radius", Toast.LENGTH_LONG).show();
-                    seekBar.setProgress(firstRadius);
-                }
-            });
+            @Override
+            public void onProgressChanged(DiscreteSeekBar seekBar, int value, boolean fromUser) {
+            }
+
+            @Override
+            public void onStartTrackingTouch(DiscreteSeekBar seekBar) {
+                startRadius = seekBar.getProgress();
+            }
+
+            @Override
+            public void onStopTrackingTouch(DiscreteSeekBar seekBar) {
+                wearPref.put(getString(R.string.key_preference_search_range), seekBar.getProgress());
+                wearPref.sync(new WearSharedPreference.OnSyncListener() {
+                    @Override
+                    public void onSuccess() {
+                    }
+
+                    @Override
+                    public void onFail(Exception e) {
+                        seekBar.setProgress(startRadius);
+                    }
+                });
+            }
         });
     }
 

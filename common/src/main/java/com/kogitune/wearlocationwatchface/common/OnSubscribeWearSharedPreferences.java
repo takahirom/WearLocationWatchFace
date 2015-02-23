@@ -2,6 +2,7 @@ package com.kogitune.wearlocationwatchface.common;
 
 import android.content.Context;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.kogitune.wearsharedpreference.WearSharedPreference;
 
@@ -32,9 +33,11 @@ public class OnSubscribeWearSharedPreferences implements Observable.OnSubscribe<
 
     @Override
     public void call(Subscriber<? super Void> subscriber) {
+        Log.d("OnSubscribePreferences","preferences sync");
         wearSharedPreference.sync(new WearSharedPreference.OnSyncListener() {
             @Override
             public void onSuccess() {
+                Log.d("OnSubscribePreferences","preferences success");
                 subscriber.onNext(null);
                 subscriber.onCompleted();
             }

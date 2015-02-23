@@ -649,20 +649,19 @@ public class DiscreteSeekBar extends View {
     }
 
     private boolean startDragging(MotionEvent ev, boolean ignoreTrackIfInScrollContainer) {
+        if (mPublicChangeListener != null) {
+            mPublicChangeListener.onStartTrackingTouch(this);
+        }
+
         final Rect bounds = mTempRect;
         mThumb.copyBounds(bounds);
         //Grow the current thumb rect for a bigger touch area
         bounds.inset(-mAddedTouchBounds, -mAddedTouchBounds);
         mIsDragging = (bounds.contains((int) ev.getX(), (int) ev.getY()));
-        if (mIsDragging) {
-            onStartTrackingTouch();
-        }
         if (!mIsDragging && mAllowTrackClick && !ignoreTrackIfInScrollContainer) {
             //If the user clicked outside the thumb, we compute the current position
             //and force an immediate drag to it.
             mIsDragging = true;
-            onStartTrackingTouch();
-
             mDragOffset = (bounds.width() / 2) - mAddedTouchBounds;
             updateDragging(ev);
             //As the thumb may have moved, get the bounds again
@@ -678,21 +677,13 @@ public class DiscreteSeekBar extends View {
         return mIsDragging;
     }
 
-    private void onStartTrackingTouch() {
-        if (mPublicChangeListener != null) {
-            mPublicChangeListener.onStartTrackingTouch(this);
-        }
-    }
-
     private boolean isDragging() {
         return mIsDragging;
     }
 
     private void stopDragging() {
-        if (mIsDragging){
-            if (mPublicChangeListener != null) {
-                mPublicChangeListener.onStopTrackingTouch(this);
-            }
+        if (mPublicChangeListener != null) {
+            mPublicChangeListener.onStopTrackingTouch(this);
         }
         mIsDragging = false;
         setPressed(false);
