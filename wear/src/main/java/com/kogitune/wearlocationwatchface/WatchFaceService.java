@@ -4,6 +4,7 @@ package com.kogitune.wearlocationwatchface;
  * Created by takam on 2014/12/29.
  */
 
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -12,8 +13,10 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.os.Bundle;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.View;
@@ -32,7 +35,7 @@ import java.util.Random;
 
 import static rx.android.schedulers.AndroidSchedulers.mainThread;
 
-public class WatchFaceService extends CanvasWatchFaceService {
+public class WatchFaceService extends CanvasWatchFaceService implements WearSharedPreference.OnPreferenceChangeListener {
     private static final String TAG = "WatchFaceService";
     private static final int INTERVAL_SETTING_PHOTO = 60 * 60 * 1000;
     public long beforeRefreshTime;
@@ -47,10 +50,12 @@ public class WatchFaceService extends CanvasWatchFaceService {
     private String largePhotoUrl;
     private String photoTitle;
     private State state = State.NORMAL;
+    private WearSharedPreference wearPref;
 
     @Override
     public Engine onCreateEngine() {
 
+        wearPref = new WearSharedPreference(this);
         engine = new WatchFaceEngine();
         floatingActionBarManager = new FloatingActionBarManager(this);
         floatingActionBarManager.setOnClickListener(new View.OnClickListener() {
@@ -59,8 +64,22 @@ public class WatchFaceService extends CanvasWatchFaceService {
                 startRefresh();
             }
         });
+        wearPref.registerOnPreferenceChangeListener(this);
 
         return engine;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        wearPref.unregisterOnPreferenceChangeListener();
+    }
+
+    @Override
+    public void onPreferenceChange(WearSharedPreference preference, String key, Bundle bundle) {
+        Toast.makeText(this, key + ":" + bundle.get(key), Toast.LENGTH_LONG).show();
+        if (TextUtils.equals(key, getString(R.string.key_preference_time_text_accent))) {
+        }
     }
 
     private void refreshIfNeed() {
@@ -87,6 +106,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
     }
 
     private void applyView(String jsonString) {
+        Log.d(TAG, jsonString);
         try {
             final JSONArray photosArray = new JSONObject(jsonString).getJSONObject("photos").getJSONArray("photo");
             Log.d(TAG, "photoArray" + photosArray.length() + photosArray);
@@ -141,6 +161,7 @@ public class WatchFaceService extends CanvasWatchFaceService {
             }
         });
     }
+
 
     enum State {
         NORMAL,

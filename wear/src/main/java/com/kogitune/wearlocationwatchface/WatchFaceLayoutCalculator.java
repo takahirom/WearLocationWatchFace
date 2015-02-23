@@ -27,12 +27,10 @@ public class WatchFaceLayoutCalculator {
     private int actionButtonX;
     private int actionButtonY;
 
-    public void calc(Resources res,Bitmap locationImageBitmap, Rect wearRect, int peekCardPosition) {
+    public void calc(Resources res, Bitmap locationImageBitmap, Rect wearRect, int peekCardPosition) {
         final float imageSizeRate = (float) wearRect.right / locationImageBitmap.getWidth();
-        float imageRatio = locationImageBitmap.getWidth() / (float)locationImageBitmap.getHeight();
+        float imageRatio = locationImageBitmap.getWidth() / (float) locationImageBitmap.getHeight();
         final Palette palette = Palette.generate(locationImageBitmap);
-        Log.d(TAG, "imageSizeRate" + imageSizeRate);
-        Log.d(TAG, "imageRatio" + imageRatio);
         if (imageRatio < 1.5) {
             imageRatio = 1.5f;
         }
