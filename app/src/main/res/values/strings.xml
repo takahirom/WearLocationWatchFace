@@ -6,4 +6,7 @@
     <string name="action_settings">Settings</string>
     <string name="favorite_photo">favolite photo</string>
 
+    <string name="open_drawer">open</string>
+    <string name="close_drawer">close</string>
+
 </resources>

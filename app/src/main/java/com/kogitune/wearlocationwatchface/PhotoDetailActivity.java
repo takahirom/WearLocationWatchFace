@@ -23,8 +23,6 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -49,7 +47,7 @@ import rx.Subscriber;
 import rx.android.content.ContentObservable;
 import rx.functions.Action1;
 
-public class MainActivity extends ActionBarActivity implements ObservableScrollView.Callbacks {
+public class PhotoDetailActivity extends ActionBarActivity implements ObservableScrollView.Callbacks {
 
     // constants
     private static final int GLIDE_DISK_CACHE_SIZE_IN_BYTES = 128 * 1024 * 1024;
@@ -117,10 +115,10 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
         fabButton = (CheckableFrameLayout) findViewById(R.id.fab_button);
         fabButton.setOnClickListener(view -> {
             if (!starred) {
-                String beforePhotoUrl = new WearSharedPreference(MainActivity.this).get(getString(R.string.key_preference_photo_url), "");
+                String beforePhotoUrl = new WearSharedPreference(PhotoDetailActivity.this).get(getString(R.string.key_preference_photo_url), "");
                 downloadAndOpen(beforePhotoUrl);
             }
-            boolean starredReverse = !MainActivity.this.starred;
+            boolean starredReverse = !PhotoDetailActivity.this.starred;
             showStarred(starredReverse, true);
         });
 
@@ -143,7 +141,7 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
                     }
                 })
                 .flatMap(b ->
-                        Observable.create(new OnSubscribeWearSharedPreferences(MainActivity.this, getString(R.string.key_preference_time_text_accent), b)))
+                        Observable.create(new OnSubscribeWearSharedPreferences(PhotoDetailActivity.this, getString(R.string.key_preference_time_text_accent), b)))
                 .subscribe((subscriber) -> {
                 }, throwable -> {
                     throwable.printStackTrace();
@@ -252,7 +250,7 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
                         super.onResourceReady(bitmap, anim);
 
                         hasPhoto = true;
-                        Palette.generateAsync(bitmap, MainActivity.this::applyTheme);
+                        Palette.generateAsync(bitmap, PhotoDetailActivity.this::applyTheme);
                     }
                 });
     }
@@ -338,7 +336,7 @@ public class MainActivity extends ActionBarActivity implements ObservableScrollV
                 openFileIntent.setDataAndType(downloadManager.getUriForDownloadedFile(downloadId), "image/*");
                 startActivity(openFileIntent);
 
-                Toast toast = Toast.makeText(MainActivity.this,
+                Toast toast = Toast.makeText(PhotoDetailActivity.this,
                         "Downloading of data just finished", Toast.LENGTH_LONG);
                 toast.setGravity(Gravity.TOP, 25, 400);
                 toast.show();
