@@ -25,15 +25,15 @@ public class FlickrObservable {
     private final FlickrService mWebService;
 
     public FlickrObservable(Context context) {
-        OkHttpClient ok = new OkHttpClient();
+        OkHttpClient httpClient = new OkHttpClient();
         try {
             Cache responseCache = new Cache(context.getCacheDir(), 1024 * 1024);
-            ok.setCache(responseCache);
+            httpClient.setCache(responseCache);
         } catch (Exception e) {
             Log.d(TAG, "Unable to set http cache", e);
         }
-        ok.setReadTimeout(30, TimeUnit.SECONDS);
-        ok.setConnectTimeout(30, TimeUnit.SECONDS);
+        httpClient.setReadTimeout(30, TimeUnit.SECONDS);
+        httpClient.setConnectTimeout(30, TimeUnit.SECONDS);
 
         RestAdapter restAdapter = new RestAdapter.Builder()
                 .setEndpoint(WEB_SERVICE_BASE_URL)
@@ -43,12 +43,17 @@ public class FlickrObservable {
     }
 
     public Observable<PhotoShowInfo> fetchPhotoInfo(final String photoId) {
-        Log.d("Observable", "startFetch");
         return Observable.zip(mWebService.fetchPhotoInfo(photoId),
                 mWebService.fetchPhotoSizes(photoId), new Func2<PhotoDatas.PhotoInfo, PhotoDatas.PhotoSizes, PhotoShowInfo>() {
                     @Override
                     public PhotoShowInfo call(PhotoDatas.PhotoInfo photoInfo, PhotoDatas.PhotoSizes photoSizes) {
-                        return new PhotoShowInfo(photoInfo.photo.title.toString(), photoInfo.photo.description.toString(), photoSizes.sizes.size.get(0).source);
+                        String source = photoSizes.sizes.size.get(0).source;
+                        for (PhotoDatas.PhotoSizes.Sizes.Size size : photoSizes.sizes.size) {
+                            if ("Large".equals(size.label)) {
+                                source = size.source;
+                            }
+                        }
+                        return new PhotoShowInfo(photoInfo.photo.title.toString(), photoInfo.photo.description.toString(), source);
                     }
                 });
     }
@@ -89,6 +94,7 @@ public class FlickrObservable {
                 public List<Size> size;
                 public class Size{
                     public String source;
+                    public String label;
                 }
             }
         }

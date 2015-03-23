@@ -51,7 +51,7 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
     public MenuAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
         if (viewType == TYPE_ITEM) {
-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_row,parent,false); 
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.drawer_item_row,parent,false);
 
             ViewHolder vhItem = new ViewHolder(v,viewType);
 
@@ -59,7 +59,7 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
 
         } else if (viewType == TYPE_HEADER) {
 
-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.header,parent,false);
+            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.drawer_header,parent,false);
 
             ViewHolder vhHeader = new ViewHolder(v,viewType);
 
