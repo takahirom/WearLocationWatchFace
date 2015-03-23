@@ -4,7 +4,6 @@ package com.kogitune.wearlocationwatchface;
  * Created by takam on 2014/12/29.
  */
 
-import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -47,8 +46,7 @@ public class WatchFaceService extends CanvasWatchFaceService implements WearShar
     private SimpleDateFormat hourFormat = new SimpleDateFormat("HH:");
     private SimpleDateFormat minuteFormat = new SimpleDateFormat("mm");
     private FloatingActionBarManager floatingActionBarManager;
-    private String largePhotoUrl;
-    private String photoTitle;
+    private String photoId;
     private State state = State.NORMAL;
     private WearSharedPreference wearPref;
 
@@ -121,9 +119,7 @@ public class WatchFaceService extends CanvasWatchFaceService implements WearShar
             Log.d(TAG, "str:" + photoUrl);
             fetchAndApplyPhotoBitmap(photoUrl);
 
-            largePhotoUrl = photosArray.getJSONObject(nextIndex).getString("url_l").toString();
-            photoTitle = photosArray.getJSONObject(nextIndex).getString("title").toString();
-
+            photoId = photosArray.getJSONObject(nextIndex).getString("id").toString();
         } catch (JSONException e) {
             Log.d(TAG, "json" + jsonString);
             e.printStackTrace();
@@ -138,7 +134,7 @@ public class WatchFaceService extends CanvasWatchFaceService implements WearShar
             beforeRefreshTime = System.currentTimeMillis();
             floatingActionBarManager.stopRefresh();
 
-            savePhotoUrl(photoTitle, largePhotoUrl);
+            savePhotoId();
         }, throwable -> {
             throwable.printStackTrace();
             Toast.makeText(WatchFaceService.this, "Can't get photo.Please retry later.", Toast.LENGTH_LONG).show();
@@ -147,10 +143,17 @@ public class WatchFaceService extends CanvasWatchFaceService implements WearShar
 
     }
 
-    private void savePhotoUrl(String title, String photoUrl) {
+    private void savePhotoId() {
         final WearSharedPreference preference = new WearSharedPreference(this);
-        preference.put(getString(R.string.key_preference_photo_url), photoUrl);
-        preference.put(getString(R.string.key_preference_photo_title), title);
+        final String photoIdsKey = getString(R.string.key_preference_photo_ids);
+        final String historyPhotoIdsString = photoId + "," + preference.get(photoIdsKey, "");
+        final String[] historyPhotoIdsArray = historyPhotoIdsString.split(",");
+        final StringBuilder savingPhotoIds = new StringBuilder();
+        for (int i = 0; i < historyPhotoIdsArray.length && i < 10; i++) {
+            savingPhotoIds.append(historyPhotoIdsArray[i]);
+            savingPhotoIds.append(",");
+        }
+        preference.put(photoIdsKey, savingPhotoIds.toString());
         preference.sync(new WearSharedPreference.OnSyncListener() {
             @Override
             public void onSuccess() {

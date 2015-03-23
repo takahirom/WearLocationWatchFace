@@ -16,11 +16,7 @@
 
 package com.kogitune.wearlocationwatchface.util;
 
-import android.text.format.DateUtils;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.regex.Pattern;
+import android.content.res.Resources;
 
 import static com.kogitune.wearlocationwatchface.util.LogUtils.makeLogTag;
 
@@ -37,6 +33,10 @@ public class UIUtils {
         }
 
         return (value - min) / (float) (max - min);
+    }
+
+    public static int dpToPx(int dp) {
+        return (int) (dp * Resources.getSystem().getDisplayMetrics().density);
     }
 
 }

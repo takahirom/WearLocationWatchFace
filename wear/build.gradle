@@ -18,7 +18,7 @@ repositories {
     mavenCentral()
 }
 
-apply plugin: 'com.android.application' //or apply plugin: 'java'
+apply plugin: 'com.android.application'
 apply plugin: 'me.tatarka.retrolambda'
 
 

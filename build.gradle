@@ -20,8 +20,7 @@ allprojects {
             }
             project.android.defaultConfig.with {
                 buildConfigField 'String', "FLICKR_API_KEY", "\"" + project.FLICKR_API_KEY + "\""
-                resValue "string", "key_preference_photo_url", "key_preference_photo_url"
-                resValue "string", "key_preference_photo_title", "key_preference_photo_title"
+                resValue "string", "key_preference_photo_ids", "key_preference_photo_ids"
                 resValue "string", "key_preference_search_range", "key_preference_search_range"
                 resValue "string", "key_preference_time_text_accent", "key_preference_time_text_accent"
                 resValue "bool", "time_text_accent_default", "true"

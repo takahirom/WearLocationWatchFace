@@ -60,4 +60,9 @@ dependencies {
     compile 'io.reactivex:rxandroid:0.24.0'
     compile "com.android.support:cardview-v7:22.+"
 
+    compile 'com.jakewharton:butterknife:6.1.0'
+
+    compile 'com.squareup.retrofit:retrofit:1.9.+'
+    compile 'com.squareup.okhttp:okhttp:2.3.0'
+
 }
