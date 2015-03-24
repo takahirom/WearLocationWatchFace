@@ -7,8 +7,13 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.GlideBuilder;
+import com.bumptech.glide.load.DecodeFormat;
+import com.bumptech.glide.load.engine.cache.DiskLruCacheWrapper;
 import com.kogitune.wearlocationwatchface.R;
 import com.kogitune.wearlocationwatchface.adapter.MenuAdapter;
 import com.kogitune.wearlocationwatchface.adapter.PhotoListAdapter;
@@ -27,6 +32,8 @@ import rx.schedulers.Schedulers;
 
 public class PhotoListActivity extends RxActionBarActivity {
 
+    // constants
+    private static final int GLIDE_DISK_CACHE_SIZE_IN_BYTES = 128 * 1024 * 1024;
 
     private static final int ANIM_DURATION_TOOLBAR = 300;
     String TITLES[] = {"Home", "Settings"};
@@ -53,6 +60,12 @@ public class PhotoListActivity extends RxActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo_list);
+
+        if (!Glide.isSetup()) {
+            Glide.setup(new GlideBuilder(this)
+                    .setDiskCache(DiskLruCacheWrapper.get(Glide.getPhotoCacheDir(this), GLIDE_DISK_CACHE_SIZE_IN_BYTES))
+                    .setDecodeFormat(DecodeFormat.PREFER_RGB_565));
+        }
         ButterKnife.inject(this);
 
         setSupportActionBar(toolbar);
@@ -71,12 +84,28 @@ public class PhotoListActivity extends RxActionBarActivity {
 
         final PhotoListAdapter photoListAdapter = new PhotoListAdapter();
         photoListRecyclerView.setAdapter(photoListAdapter);
+        final long startTime = AnimationUtils.currentAnimationTimeMillis();
         LifecycleObservable.bindActivityLifecycle(lifecycle(), Observable.from(photoIdArray).concatMap(new Func1<String, Observable<FlickrObservable.PhotoShowInfo>>() {
             @Override
             public Observable<FlickrObservable.PhotoShowInfo> call(String s) {
                 return new FlickrObservable(PhotoListActivity.this).fetchPhotoInfo(s);
             }
-        })).subscribeOn(Schedulers.newThread())
+        })).map(new Func1<FlickrObservable.PhotoShowInfo, FlickrObservable.PhotoShowInfo>() {
+            @Override
+            public FlickrObservable.PhotoShowInfo call(FlickrObservable.PhotoShowInfo photoShowInfo) {
+                final long currentTime = AnimationUtils.currentAnimationTimeMillis();
+                final long sleepTimeForAnimation = 600 - (currentTime - startTime);
+                if (sleepTimeForAnimation < 0) {
+                    return photoShowInfo;
+                }
+                try {
+                    Thread.sleep(sleepTimeForAnimation);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return photoShowInfo;
+            }
+        }).subscribeOn(Schedulers.newThread())
                 .observeOn(AndroidSchedulers.mainThread()).subscribe(new Action1<FlickrObservable.PhotoShowInfo>() {
             @Override
             public void call(FlickrObservable.PhotoShowInfo photoShowInfo) {

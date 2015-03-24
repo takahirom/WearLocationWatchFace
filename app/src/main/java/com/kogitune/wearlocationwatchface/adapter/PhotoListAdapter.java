@@ -1,5 +1,6 @@
 package com.kogitune.wearlocationwatchface.adapter;
 
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,6 +11,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
+import com.kogitune.wearlocationwatchface.PhotoDetailActivity;
 import com.kogitune.wearlocationwatchface.R;
 import com.kogitune.wearlocationwatchface.observable.FlickrObservable;
 import com.kogitune.wearlocationwatchface.util.UIUtils;
@@ -46,6 +48,14 @@ public class PhotoListAdapter extends RecyclerView.Adapter<PhotoListAdapter.View
         runEnterAnimation(holder.itemView, position);
         final FlickrObservable.PhotoShowInfo photoShowInfo = photoShowInfoList.get(position);
         holder.textView.setText(photoShowInfo.title);
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Intent intent = new Intent(v.getContext(), PhotoDetailActivity.class);
+                intent.putExtras(photoShowInfoList.get(position).getBundle());
+                v.getContext().startActivity(intent);
+            }
+        });
         Glide.with(holder.imageView.getContext())
                 .load(photoShowInfo.url)
                 .asBitmap()
@@ -69,10 +79,6 @@ public class PhotoListAdapter extends RecyclerView.Adapter<PhotoListAdapter.View
         }
     }
 
-
-    private boolean isPositionHeader(int position) {
-        return position == 0;
-    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView textView;
