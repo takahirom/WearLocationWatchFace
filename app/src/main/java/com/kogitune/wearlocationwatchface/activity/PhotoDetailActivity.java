@@ -26,9 +26,6 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.GlideBuilder;
-import com.bumptech.glide.load.DecodeFormat;
-import com.bumptech.glide.load.engine.cache.DiskLruCacheWrapper;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.kogitune.wearlocationwatchface.common.OnSubscribeWearSharedPreferences;
@@ -81,7 +78,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_photo_detail);
         photoShowInfo = FlickrObservable.PhotoShowInfo.parseBundle(getIntent().getExtras());
 
         lUtil = LUtils.getInstance(this);
