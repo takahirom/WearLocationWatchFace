@@ -33,7 +33,7 @@ import rx.schedulers.Schedulers;
 public class PhotoListActivity extends RxActionBarActivity {
 
     // constants
-    private static final int GLIDE_DISK_CACHE_SIZE_IN_BYTES = 128 * 1024 * 1024;
+    private static final int GLIDE_DISK_CACHE_SIZE_IN_BYTES = 512 * 1024 * 1024;
 
     private static final int ANIM_DURATION_TOOLBAR = 300;
     String TITLES[] = {"Home", "Settings"};

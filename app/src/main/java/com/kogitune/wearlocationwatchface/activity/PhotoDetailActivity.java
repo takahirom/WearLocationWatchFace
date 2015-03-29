@@ -1,4 +1,4 @@
-package com.kogitune.wearlocationwatchface;
+package com.kogitune.wearlocationwatchface.activity;
 
 import android.app.DownloadManager;
 import android.content.Context;
@@ -28,6 +28,8 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
+import com.kogitune.activity_transition.ActivityTransition;
+import com.kogitune.wearlocationwatchface.R;
 import com.kogitune.wearlocationwatchface.common.OnSubscribeWearSharedPreferences;
 import com.kogitune.wearlocationwatchface.observable.FlickrObservable;
 import com.kogitune.wearlocationwatchface.util.LUtils;
@@ -38,6 +40,8 @@ import com.kogitune.wearsharedpreference.WearSharedPreference;
 
 import org.adw.library.widgets.discreteseekbar.DiscreteSeekBar;
 
+import butterknife.ButterKnife;
+import butterknife.InjectView;
 import io.codetail.animation.SupportAnimator;
 import io.codetail.animation.ViewAnimationUtils;
 import rx.Observable;
@@ -49,18 +53,20 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
 
     private static final String TAG = "MainActivity";
     private static final float PHOTO_ASPECT_RATIO = 1.5f;
-
+    // views
+    @InjectView(R.id.toolbar)
+    Toolbar toolbar;
+    @InjectView(R.id.scroll_view)
+    ObservableScrollView scrollView;
+    @InjectView(R.id.beforePhoto)
+    ImageView photoImageView;
+    @InjectView(R.id.fab_button)
+    CheckableFrameLayout fabButton;
+    @InjectView(R.id.details_container)
+    View detailsContainer;
     private WearSharedPreference wearPref;
     private LUtils lUtil;
-
-    // views
-    private Toolbar toolbar;
-    private ObservableScrollView scrollView;
     private int photoHeightPixels;
-    private View headerBox;
-    private CheckableFrameLayout fabButton;
-    private ImageView photoImageView;
-    private View detailsContainer;
 
     // flags
     private boolean starred;
@@ -71,7 +77,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
     private int fabElevation;
     private int headerHeightPixels;
 
-    private ViewTreeObserver.OnGlobalLayoutListener mGlobalLayoutListener = this::recomputePhotoAndScrollingMetrics;
+    private ViewTreeObserver.OnPreDrawListener mGlobalLayoutListener = this::recomputePhotoAndScrollingMetrics;
     private int oldPhotoHashCode;
     private FlickrObservable.PhotoShowInfo photoShowInfo;
 
@@ -79,34 +85,32 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo_detail);
+        ButterKnife.inject(this);
         photoShowInfo = FlickrObservable.PhotoShowInfo.parseBundle(getIntent().getExtras());
 
         lUtil = LUtils.getInstance(this);
         wearPref = new WearSharedPreference(this);
 
+        ActivityTransition.with(getIntent()).to(photoImageView).duration(500).start(savedInstanceState);
         setupViews();
     }
+
 
     private void setupViews() {
         Resources res = getResources();
 
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle(photoShowInfo.title);
         toolbar.getMenu().clear();
         setSupportActionBar(toolbar);
 
-        scrollView = (ObservableScrollView) findViewById(R.id.scroll_view);
-        scrollView.addCallbacks(this);
-        scrollView.getViewTreeObserver().addOnGlobalLayoutListener(mGlobalLayoutListener);
 
-        headerBox = findViewById(R.id.toolbar);
+        scrollView.addCallbacks(this);
+        scrollView.getViewTreeObserver().addOnPreDrawListener(mGlobalLayoutListener);
+
         maxHeaderElevation = getResources().getDimensionPixelSize(
                 R.dimen.session_detail_max_header_elevation);
         fabElevation = getResources().getDimensionPixelSize(R.dimen.fab_elevation);
 
-        detailsContainer = findViewById(R.id.details_container);
-
-        fabButton = (CheckableFrameLayout) findViewById(R.id.fab_button);
         fabButton.setOnClickListener(view -> {
             if (!starred) {
                 downloadAndOpen(photoShowInfo.url);
@@ -115,8 +119,6 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
             showStarred(starredReverse, true);
         });
 
-
-        photoImageView = (ImageView) findViewById(R.id.beforePhoto);
 
         setupPhotoAndApplyTheme();
         DiscreteSeekBar searchRadiusSeekBar = (DiscreteSeekBar) findViewById(R.id.search_radius);
@@ -171,32 +173,28 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         });
     }
 
-    private void recomputePhotoAndScrollingMetrics() {
-        headerHeightPixels = headerBox.getHeight();
+    private boolean recomputePhotoAndScrollingMetrics() {
+        scrollView.getViewTreeObserver().removeOnPreDrawListener(mGlobalLayoutListener);
+        headerHeightPixels = toolbar.getHeight();
 
         photoHeightPixels = 0;
-        if (hasPhoto) {
-            photoHeightPixels = (int) (photoImageView.getWidth() / PHOTO_ASPECT_RATIO);
-        }
-
-        ViewGroup.LayoutParams lp;
-        lp = photoImageView.getLayoutParams();
-        if (lp.height != photoHeightPixels) {
-            lp.height = photoHeightPixels;
-            photoImageView.setLayoutParams(lp);
-        }
-        if(hasPhoto) {
-            startAnimationIfImageChanged();
-        }
+        photoHeightPixels = photoImageView.getHeight();
 
         ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams)
                 detailsContainer.getLayoutParams();
-        if (mlp.topMargin != headerHeightPixels + photoHeightPixels) {
-            mlp.topMargin = headerHeightPixels + photoHeightPixels;
-            detailsContainer.setLayoutParams(mlp);
-        }
+        mlp.topMargin = headerHeightPixels + photoHeightPixels;
+        detailsContainer.setLayoutParams(mlp);
 
         onScrollChanged(0, 0); // trigger scroll handling
+        toolbar.setTranslationY(UIUtils.getScreenHeight(this));
+        detailsContainer.setTranslationY(UIUtils.getScreenHeight(this));
+        toolbar.animate()
+                .translationY(photoHeightPixels)
+                .setDuration(300)
+                .setStartDelay(300);
+        detailsContainer.animate().translationY(0).setDuration(300)
+                .setStartDelay(400);
+        return true;
     }
 
     private void startAnimationIfImageChanged() {
@@ -205,7 +203,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
             return;
         }
         final int newPhotoHashCode = drawable.hashCode();
-        if(oldPhotoHashCode != newPhotoHashCode) {
+        if (oldPhotoHashCode != newPhotoHashCode) {
             startCircularRevealAnimation(photoHeightPixels);
         }
         oldPhotoHashCode = newPhotoHashCode;
@@ -230,7 +228,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
             return;
         }
 
-        setPhotoAndApplyTheme(beforePhotoUrl);
+        //setPhotoAndApplyTheme(beforePhotoUrl);
     }
 
     private void setPhotoAndApplyTheme(String beforePhotoUrl) {
@@ -241,7 +239,6 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
                     @Override
                     public void onResourceReady(Bitmap bitmap, GlideAnimation anim) {
                         super.onResourceReady(bitmap, anim);
-
                         hasPhoto = true;
                         Palette.generateAsync(bitmap, PhotoDetailActivity.this::applyTheme);
                     }
@@ -283,9 +280,9 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
     @Override
     public void onScrollChanged(int deltaX, int deltaY) {
         int scrollY = scrollView.getScrollY();
-
         float newTop = Math.max(photoHeightPixels, scrollY);
-        headerBox.setTranslationY(newTop);
+
+        toolbar.setTranslationY(newTop);
         fabButton.setTranslationY(newTop + headerHeightPixels
                 - fabButton.getHeight() / 2);
 
@@ -296,7 +293,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
                     photoHeightPixels), 0), 1);
         }
 
-        ViewCompat.setElevation(headerBox, gapFillProgress * maxHeaderElevation);
+        ViewCompat.setElevation(toolbar, gapFillProgress * maxHeaderElevation);
         ViewCompat.setElevation(fabButton, gapFillProgress * maxHeaderElevation
                 + fabElevation);
 
@@ -349,7 +346,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
                     return;
                 }
                 final String photoUrl = bundle.getString(key);
-                setPhotoAndApplyTheme(photoUrl);
+                //setPhotoAndApplyTheme(photoUrl);
             }
         });
     }
