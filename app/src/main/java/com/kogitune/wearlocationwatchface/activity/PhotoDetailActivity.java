@@ -29,6 +29,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.kogitune.activity_transition.ActivityTransition;
+import com.kogitune.activity_transition.ExitActivityTransition;
 import com.kogitune.wearlocationwatchface.R;
 import com.kogitune.wearlocationwatchface.common.OnSubscribeWearSharedPreferences;
 import com.kogitune.wearlocationwatchface.observable.FlickrObservable;
@@ -53,6 +54,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
 
     private static final String TAG = "MainActivity";
     private static final float PHOTO_ASPECT_RATIO = 1.5f;
+    public static final int DURATION = 500;
     // views
     @InjectView(R.id.toolbar)
     Toolbar toolbar;
@@ -80,6 +82,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
     private ViewTreeObserver.OnPreDrawListener mGlobalLayoutListener = this::recomputePhotoAndScrollingMetrics;
     private int oldPhotoHashCode;
     private FlickrObservable.PhotoShowInfo photoShowInfo;
+    private ExitActivityTransition exitActivityTransition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,10 +94,27 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         lUtil = LUtils.getInstance(this);
         wearPref = new WearSharedPreference(this);
 
-        ActivityTransition.with(getIntent()).to(photoImageView).duration(500).start(savedInstanceState);
+        exitActivityTransition = ActivityTransition.with(getIntent()).to(photoImageView).duration(DURATION).start(savedInstanceState);
         setupViews();
     }
 
+    @Override
+    public void onBackPressed() {
+        toolbar.setAlpha(0);
+        detailsContainer.setAlpha(0);
+
+        int[] screenLocation = new int[2];
+        fabButton.getLocationOnScreen(screenLocation);
+        fabButton.animate()
+                .setDuration(DURATION)
+                .scaleX(0).scaleY(0);
+
+        if (scrollView.getScrollY() != 0) {
+            super.onBackPressed();
+            return;
+        }
+        exitActivityTransition.exit(this);
+    }
 
     private void setupViews() {
         Resources res = getResources();
@@ -110,6 +130,9 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         maxHeaderElevation = getResources().getDimensionPixelSize(
                 R.dimen.session_detail_max_header_elevation);
         fabElevation = getResources().getDimensionPixelSize(R.dimen.fab_elevation);
+        fabButton.setScaleX(0);
+        fabButton.setScaleY(0);
+        fabButton.animate().scaleX(1).scaleY(1).setInterpolator(new AccelerateDecelerateInterpolator()).setDuration(DURATION);
 
         fabButton.setOnClickListener(view -> {
             if (!starred) {
@@ -285,6 +308,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         toolbar.setTranslationY(newTop);
         fabButton.setTranslationY(newTop + headerHeightPixels
                 - fabButton.getHeight() / 2);
+
 
         float gapFillProgress = 1;
         if (photoHeightPixels != 0) {

@@ -15,8 +15,8 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.kogitune.activity_transition.ActivityTransitionLauncher;
-import com.kogitune.wearlocationwatchface.activity.PhotoDetailActivity;
 import com.kogitune.wearlocationwatchface.R;
+import com.kogitune.wearlocationwatchface.activity.PhotoDetailActivity;
 import com.kogitune.wearlocationwatchface.observable.FlickrObservable;
 import com.kogitune.wearlocationwatchface.util.UIUtils;
 
@@ -58,7 +58,7 @@ public class PhotoListAdapter extends RecyclerView.Adapter<PhotoListAdapter.View
                 final Intent intent = new Intent(v.getContext(), PhotoDetailActivity.class);
                 intent.putExtras(photoShowInfoList.get(position).getBundle());
                 final Bitmap bitmap = ((BitmapDrawable) holder.imageView.getDrawable()).getBitmap();
-                ActivityTransitionLauncher.with((Activity) v.getContext()).image(bitmap).from(v).launch(intent);
+                ActivityTransitionLauncher.with((Activity) v.getContext()).image(bitmap).from(holder.imageView).launch(intent);
             }
         });
         Glide.with(holder.imageView.getContext())
