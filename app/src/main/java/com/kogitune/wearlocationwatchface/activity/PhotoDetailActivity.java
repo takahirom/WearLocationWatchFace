@@ -13,7 +13,6 @@ import android.os.Bundle;
 import android.support.v4.view.ViewCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.graphics.Palette;
-import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
@@ -31,7 +30,6 @@ import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.kogitune.activity_transition.ActivityTransition;
 import com.kogitune.activity_transition.ExitActivityTransition;
 import com.kogitune.wearlocationwatchface.R;
-import com.kogitune.wearlocationwatchface.common.OnSubscribeWearSharedPreferences;
 import com.kogitune.wearlocationwatchface.observable.FlickrObservable;
 import com.kogitune.wearlocationwatchface.util.LUtils;
 import com.kogitune.wearlocationwatchface.util.UIUtils;
@@ -39,14 +37,10 @@ import com.kogitune.wearlocationwatchface.widget.CheckableFrameLayout;
 import com.kogitune.wearlocationwatchface.widget.ObservableScrollView;
 import com.kogitune.wearsharedpreference.WearSharedPreference;
 
-import org.adw.library.widgets.discreteseekbar.DiscreteSeekBar;
-
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import io.codetail.animation.SupportAnimator;
 import io.codetail.animation.ViewAnimationUtils;
-import rx.Observable;
-import rx.Subscriber;
 import rx.android.content.ContentObservable;
 import rx.functions.Action1;
 
@@ -144,56 +138,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
 
 
         setupPhotoAndApplyTheme();
-        DiscreteSeekBar searchRadiusSeekBar = (DiscreteSeekBar) findViewById(R.id.search_radius);
 
-        final SwitchCompat textAccentSwitch = (SwitchCompat) findViewById(R.id.switch_text_accent);
-        final boolean timeTextAccentEnabled = wearPref.get(getString(R.string.key_preference_time_text_accent), res.getBoolean(R.bool.time_text_accent_default));
-        textAccentSwitch.setChecked(timeTextAccentEnabled);
-        Observable
-                .create(new Observable.OnSubscribe<Boolean>() {
-                    @Override
-                    public void call(Subscriber<? super Boolean> subscriber) {
-                        textAccentSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                            subscriber.onNext(Boolean.valueOf(isChecked));
-                        });
-                    }
-                })
-                .flatMap(b ->
-                        Observable.create(new OnSubscribeWearSharedPreferences(PhotoDetailActivity.this, getString(R.string.key_preference_time_text_accent), b)))
-                .subscribe((subscriber) -> {
-                }, throwable -> {
-                    throwable.printStackTrace();
-                });
-
-        int firstRadius = wearPref.get(getString(R.string.key_preference_search_range), res.getInteger(R.integer.search_range_default));
-        searchRadiusSeekBar.setProgress(firstRadius);
-        searchRadiusSeekBar.setOnProgressChangeListener(new DiscreteSeekBar.OnProgressChangeListener() {
-            private int startRadius;
-
-            @Override
-            public void onProgressChanged(DiscreteSeekBar seekBar, int value, boolean fromUser) {
-            }
-
-            @Override
-            public void onStartTrackingTouch(DiscreteSeekBar seekBar) {
-                startRadius = seekBar.getProgress();
-            }
-
-            @Override
-            public void onStopTrackingTouch(DiscreteSeekBar seekBar) {
-                wearPref.put(getString(R.string.key_preference_search_range), seekBar.getProgress());
-                wearPref.sync(new WearSharedPreference.OnSyncListener() {
-                    @Override
-                    public void onSuccess() {
-                    }
-
-                    @Override
-                    public void onFail(Exception e) {
-                        seekBar.setProgress(startRadius);
-                    }
-                });
-            }
-        });
     }
 
     private boolean recomputePhotoAndScrollingMetrics() {
