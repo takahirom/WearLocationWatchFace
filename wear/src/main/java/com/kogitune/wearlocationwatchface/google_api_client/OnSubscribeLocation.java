@@ -27,13 +27,6 @@ public class OnSubscribeLocation implements Observable.OnSubscribe<Location> {
         updateLocation();
     }
 
-    public Location getLastLocation() {
-        if (!googleAPIClient.isConnected()) {
-            return null;
-        }
-        return LocationServices.FusedLocationApi.getLastLocation(googleAPIClient);
-    }
-
     /**
      * updateLocation if GoogleAPIClient is connected.
      */
@@ -41,17 +34,29 @@ public class OnSubscribeLocation implements Observable.OnSubscribe<Location> {
         if (!googleAPIClient.isConnected()) {
             return;
         }
+
+        final Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleAPIClient);
+        if (lastLocation != null) {
+            subscriber.onNext(lastLocation);
+            subscriber.onCompleted();
+            return;
+        }
+
         LocationServices.FusedLocationApi.requestLocationUpdates(googleAPIClient, buildLocationRequest(), location -> {
             subscriber.onNext(location);
             subscriber.onCompleted();
         });
+
+
     }
 
     private LocationRequest buildLocationRequest() {
         LocationRequest locationRequest = new LocationRequest();
         locationRequest.setNumUpdates(1);
-        locationRequest.setInterval(300000);
-        locationRequest.setFastestInterval(5000);
+        locationRequest.setFastestInterval(5000)
+                .setFastestInterval(5000L)
+                .setInterval(10000L)
+                .setSmallestDisplacement(75.0F);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         return locationRequest;
     }

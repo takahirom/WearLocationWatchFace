@@ -31,6 +31,7 @@ import org.json.JSONObject;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import static rx.android.schedulers.AndroidSchedulers.mainThread;
 
@@ -94,6 +95,7 @@ public class WatchFaceService extends CanvasWatchFaceService implements WearShar
                     int range = new WearSharedPreference(this).get(getString(R.string.key_preference_search_range), getResources().getInteger(R.integer.search_range_default));
                     return "https://api.flickr.com/services/rest/?method=flickr.photos.search&group_id=1463451@N25&api_key=" + BuildConfig.FLICKR_API_KEY + "&license=1%2C2%2C3%2C4%2C5%2C6&lat=" + location.getLatitude() + "&lon=" + location.getLongitude() + "&radius=" + range + "&extras=url_n,url_l&per_page=30&format=json&nojsoncallback=1";
                 }).flatMap(url -> GoogleApiClientObservable.fetchText(this, url))
+                .timeout(10, TimeUnit.SECONDS)
                 .observeOn(mainThread())
                 .subscribeOn(mainThread())
                 .subscribe(this::applyView,
@@ -104,7 +106,6 @@ public class WatchFaceService extends CanvasWatchFaceService implements WearShar
     }
 
     private void applyView(String jsonString) {
-        Log.d(TAG, jsonString);
         try {
             final JSONArray photosArray = new JSONObject(jsonString).getJSONObject("photos").getJSONArray("photo");
             Log.d(TAG, "photoArray" + photosArray.length() + photosArray);
