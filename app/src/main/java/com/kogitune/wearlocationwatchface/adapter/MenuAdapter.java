@@ -1,5 +1,6 @@
 package com.kogitune.wearlocationwatchface.adapter;
 
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,13 +10,24 @@ import android.widget.TextView;
 
 import com.kogitune.wearlocationwatchface.R;
 
-public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
+import java.util.List;
 
+public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_ITEM = 1;
+    private final List<MenuItem> menuItemList;
 
-    private String mNavTitles[];
-    private int mIcons[];
+    public static class MenuItem {
+        Intent intent;
+        String title;
+        int icon;
+
+        public MenuItem(Intent intent, String title, int icon) {
+            this.intent = intent;
+            this.title = title;
+            this.icon = icon;
+        }
+    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         int Holderid;
@@ -41,10 +53,8 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
 
 
 
-    public MenuAdapter(String Titles[], int Icons[]){ 
-        mNavTitles = Titles;                
-        mIcons = Icons;
-
+    public MenuAdapter(List menuItemList){
+        this.menuItemList = menuItemList;
     }
 
     @Override
@@ -74,12 +84,13 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(MenuAdapter.ViewHolder holder, int position) {
         if(holder.Holderid ==1) {
-            holder.textView.setText(mNavTitles[position - 1]);
-            holder.imageView.setImageResource(mIcons[position -1]);
+            final MenuItem item = menuItemList.get(position - 1);
+            holder.textView.setText(item.title);
+            holder.imageView.setImageResource(item.icon);
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+                    v.getContext().startActivity(item.intent);
                 }
             });
         }
@@ -90,7 +101,7 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
 
     @Override
     public int getItemCount() {
-        return mNavTitles.length+1; 
+        return menuItemList.size() +1;
     }
 
 

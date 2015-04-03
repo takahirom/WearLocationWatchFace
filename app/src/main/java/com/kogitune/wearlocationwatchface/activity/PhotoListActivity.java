@@ -1,5 +1,6 @@
 package com.kogitune.wearlocationwatchface.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -21,6 +22,9 @@ import com.kogitune.wearlocationwatchface.observable.FlickrObservable;
 import com.kogitune.wearlocationwatchface.util.UIUtils;
 import com.kogitune.wearsharedpreference.WearSharedPreference;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import rx.Observable;
@@ -36,8 +40,6 @@ public class PhotoListActivity extends RxActionBarActivity {
     private static final int GLIDE_DISK_CACHE_SIZE_IN_BYTES = 512 * 1024 * 1024;
 
     private static final int ANIM_DURATION_TOOLBAR = 300;
-    String TITLES[] = {"Home", "Settings"};
-    int ICONS[] = {R.drawable.ic_photo_library_grey600_36dp, R.drawable.ic_settings_grey600_36dp};
     @InjectView(R.id.tool_bar)
     Toolbar toolbar;
     @InjectView(R.id.toolbar_title)
@@ -140,7 +142,10 @@ public class PhotoListActivity extends RxActionBarActivity {
 
     private void setupDrawer() {
         menuRecyclerView.setHasFixedSize(true);
-        menuAdapter = new MenuAdapter(TITLES, ICONS);
+        List<MenuAdapter.MenuItem> menuItemList = new ArrayList<>();
+        menuItemList.add(new MenuAdapter.MenuItem(new Intent(this, PhotoListActivity.class), "Home", R.drawable.ic_photo_library_grey600_36dp));
+        menuItemList.add(new MenuAdapter.MenuItem(new Intent(this, SettingActivity.class), "Settings", R.drawable.ic_settings_grey600_36dp));
+        menuAdapter = new MenuAdapter(menuItemList);
         menuRecyclerView.setAdapter(menuAdapter);
 
         menuLayoutManager = new LinearLayoutManager(this);

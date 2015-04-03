@@ -23,6 +23,7 @@ public class SettingActivity extends RxActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_settings);
         ButterKnife.inject(this);
         wearPref = new WearSharedPreference(this);
         final Resources res = getResources();
