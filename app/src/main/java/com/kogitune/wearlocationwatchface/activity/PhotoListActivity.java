@@ -18,6 +18,7 @@ import com.bumptech.glide.load.engine.cache.DiskLruCacheWrapper;
 import com.kogitune.wearlocationwatchface.R;
 import com.kogitune.wearlocationwatchface.adapter.MenuAdapter;
 import com.kogitune.wearlocationwatchface.adapter.PhotoListAdapter;
+import com.kogitune.wearlocationwatchface.data.PhotoShowInfo;
 import com.kogitune.wearlocationwatchface.observable.FlickrObservable;
 import com.kogitune.wearlocationwatchface.util.UIUtils;
 import com.kogitune.wearsharedpreference.WearSharedPreference;
@@ -87,14 +88,14 @@ public class PhotoListActivity extends RxActionBarActivity {
         final PhotoListAdapter photoListAdapter = new PhotoListAdapter();
         photoListRecyclerView.setAdapter(photoListAdapter);
         final long startTime = AnimationUtils.currentAnimationTimeMillis();
-        LifecycleObservable.bindActivityLifecycle(lifecycle(), Observable.from(photoIdArray).concatMap(new Func1<String, Observable<FlickrObservable.PhotoShowInfo>>() {
+        LifecycleObservable.bindActivityLifecycle(lifecycle(), Observable.from(photoIdArray).concatMap(new Func1<String, Observable<PhotoShowInfo>>() {
             @Override
-            public Observable<FlickrObservable.PhotoShowInfo> call(String s) {
+            public Observable<PhotoShowInfo> call(String s) {
                 return new FlickrObservable(PhotoListActivity.this).fetchPhotoInfo(s);
             }
-        })).map(new Func1<FlickrObservable.PhotoShowInfo, FlickrObservable.PhotoShowInfo>() {
+        })).map(new Func1<PhotoShowInfo, PhotoShowInfo>() {
             @Override
-            public FlickrObservable.PhotoShowInfo call(FlickrObservable.PhotoShowInfo photoShowInfo) {
+            public PhotoShowInfo call(PhotoShowInfo photoShowInfo) {
                 final long currentTime = AnimationUtils.currentAnimationTimeMillis();
                 final long sleepTimeForAnimation = 600 - (currentTime - startTime);
                 if (sleepTimeForAnimation < 0) {
@@ -108,9 +109,9 @@ public class PhotoListActivity extends RxActionBarActivity {
                 return photoShowInfo;
             }
         }).subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread()).subscribe(new Action1<FlickrObservable.PhotoShowInfo>() {
+                .observeOn(AndroidSchedulers.mainThread()).subscribe(new Action1<PhotoShowInfo>() {
             @Override
-            public void call(FlickrObservable.PhotoShowInfo photoShowInfo) {
+            public void call(PhotoShowInfo photoShowInfo) {
                 photoListAdapter.addPhotoShowInfo(photoShowInfo);
             }
         }, new Action1<Throwable>() {

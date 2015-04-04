@@ -1,10 +1,10 @@
 package com.kogitune.wearlocationwatchface.observable;
 
 import android.content.Context;
-import android.os.Bundle;
 import android.util.Log;
 
 import com.kogitune.wearlocationwatchface.BuildConfig;
+import com.kogitune.wearlocationwatchface.data.PhotoShowInfo;
 import com.squareup.okhttp.Cache;
 import com.squareup.okhttp.OkHttpClient;
 
@@ -65,33 +65,6 @@ public class FlickrObservable {
 
         @GET("/?format=json&api_key=" + BuildConfig.FLICKR_API_KEY + "&method=flickr.photos.getSizes&nojsoncallback=1")
         Observable<PhotoDatas.PhotoSizes> fetchPhotoSizes(@Query("photo_id") String photoId);
-    }
-
-    public static class PhotoShowInfo {
-        public static final String TITLE = "PhotoShowInfo.title";
-        public static final String DESCRIPTION = "PhotoShowInfo.description";
-        public static final String URL = "PhotoShowInfo.url";
-        public String title;
-        public String description;
-        public String url;
-
-        public PhotoShowInfo(String title, String description, String url) {
-            this.title = title;
-            this.description = description;
-            this.url = url;
-        }
-
-        public static PhotoShowInfo parseBundle(Bundle bundle){
-            return new PhotoShowInfo(bundle.getString(TITLE),bundle.getString(DESCRIPTION),bundle.getString(URL));
-        }
-
-        public Bundle getBundle(){
-            final Bundle bundle = new Bundle();
-            bundle.putString(TITLE, title);
-            bundle.putString(DESCRIPTION, description);
-            bundle.putString(URL, url);
-            return bundle;
-        }
     }
 
     public static class PhotoDatas {

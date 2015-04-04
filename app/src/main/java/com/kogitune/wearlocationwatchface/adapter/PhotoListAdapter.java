@@ -17,7 +17,7 @@ import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.kogitune.activity_transition.ActivityTransitionLauncher;
 import com.kogitune.wearlocationwatchface.R;
 import com.kogitune.wearlocationwatchface.activity.PhotoDetailActivity;
-import com.kogitune.wearlocationwatchface.observable.FlickrObservable;
+import com.kogitune.wearlocationwatchface.data.PhotoShowInfo;
 import com.kogitune.wearlocationwatchface.util.UIUtils;
 
 import java.util.ArrayList;
@@ -25,13 +25,13 @@ import java.util.List;
 
 public class PhotoListAdapter extends RecyclerView.Adapter<PhotoListAdapter.ViewHolder> {
 
-    private final List<FlickrObservable.PhotoShowInfo> photoShowInfoList = new ArrayList<>();
+    private final List<PhotoShowInfo> photoShowInfoList = new ArrayList<>();
     private int lastAnimatedPosition = -1;
 
     public PhotoListAdapter() {
     }
 
-    public void addPhotoShowInfo(FlickrObservable.PhotoShowInfo photoShowInfo){
+    public void addPhotoShowInfo(PhotoShowInfo photoShowInfo){
         photoShowInfoList.add(photoShowInfo);
         notifyDataSetChanged();
     }
@@ -50,7 +50,7 @@ public class PhotoListAdapter extends RecyclerView.Adapter<PhotoListAdapter.View
     @Override
     public void onBindViewHolder(PhotoListAdapter.ViewHolder holder, int position) {
         runEnterAnimation(holder.itemView, position);
-        final FlickrObservable.PhotoShowInfo photoShowInfo = photoShowInfoList.get(position);
+        final PhotoShowInfo photoShowInfo = photoShowInfoList.get(position);
         holder.textView.setText(photoShowInfo.title);
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override

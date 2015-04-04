@@ -30,7 +30,7 @@ import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.kogitune.activity_transition.ActivityTransition;
 import com.kogitune.activity_transition.ExitActivityTransition;
 import com.kogitune.wearlocationwatchface.R;
-import com.kogitune.wearlocationwatchface.observable.FlickrObservable;
+import com.kogitune.wearlocationwatchface.data.PhotoShowInfo;
 import com.kogitune.wearlocationwatchface.util.LUtils;
 import com.kogitune.wearlocationwatchface.util.UIUtils;
 import com.kogitune.wearlocationwatchface.widget.CheckableFrameLayout;
@@ -75,7 +75,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
 
     private ViewTreeObserver.OnPreDrawListener mGlobalLayoutListener = this::recomputePhotoAndScrollingMetrics;
     private int oldPhotoHashCode;
-    private FlickrObservable.PhotoShowInfo photoShowInfo;
+    private PhotoShowInfo photoShowInfo;
     private ExitActivityTransition exitActivityTransition;
 
     @Override
@@ -83,7 +83,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_photo_detail);
         ButterKnife.inject(this);
-        photoShowInfo = FlickrObservable.PhotoShowInfo.parseBundle(getIntent().getExtras());
+        photoShowInfo = PhotoShowInfo.parseBundle(getIntent().getExtras());
 
         lUtil = LUtils.getInstance(this);
         wearPref = new WearSharedPreference(this);
