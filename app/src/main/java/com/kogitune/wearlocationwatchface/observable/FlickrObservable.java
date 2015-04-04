@@ -1,6 +1,7 @@
 package com.kogitune.wearlocationwatchface.observable;
 
 import android.content.Context;
+import android.location.Location;
 import android.util.Log;
 
 import com.kogitune.wearlocationwatchface.BuildConfig;
@@ -15,6 +16,7 @@ import retrofit.RestAdapter;
 import retrofit.http.GET;
 import retrofit.http.Query;
 import rx.Observable;
+import rx.functions.Func1;
 import rx.functions.Func2;
 
 /**
@@ -43,6 +45,20 @@ public class FlickrObservable {
         mWebService = restAdapter.create(FlickrService.class);
     }
 
+    public Observable<Location> fetchPhotoLocation(String pohotoId){
+        return mWebService.fetchPhotoLocation(pohotoId).map(new Func1<PhotoDatas.PhotoLocationInfo, Location>() {
+            @Override
+            public Location call(PhotoDatas.PhotoLocationInfo photoLocationInfo) {
+                final Location location = new Location("");
+                location.setLatitude(photoLocationInfo.photo.latitude);
+                location.setLongitude(photoLocationInfo.photo.longitude);
+                location.setAccuracy(photoLocationInfo.photo.accuracy);
+                return location;
+            }
+        });
+    }
+
+
     public Observable<PhotoShowInfo> fetchPhotoInfo(final String photoId) {
         return Observable.zip(mWebService.fetchPhotoInfo(photoId),
                 mWebService.fetchPhotoSizes(photoId), new Func2<PhotoDatas.PhotoInfo, PhotoDatas.PhotoSizes, PhotoShowInfo>() {
@@ -54,7 +70,8 @@ public class FlickrObservable {
                                 source = size.source;
                             }
                         }
-                        return new PhotoShowInfo(photoInfo.photo.title.toString(), photoInfo.photo.description.toString(), source);
+                        final PhotoDatas.PhotoInfo.Photo photo = photoInfo.photo;
+                        return new PhotoShowInfo(photoId, photo.title.toString(), photo.description.toString(), photo.owner.username, source);
                     }
                 });
     }
@@ -65,6 +82,9 @@ public class FlickrObservable {
 
         @GET("/?format=json&api_key=" + BuildConfig.FLICKR_API_KEY + "&method=flickr.photos.getSizes&nojsoncallback=1")
         Observable<PhotoDatas.PhotoSizes> fetchPhotoSizes(@Query("photo_id") String photoId);
+
+        @GET("/?format=json&api_key=" + BuildConfig.FLICKR_API_KEY + "&method=flickr.photos.geo.getLocation&nojsoncallback=1")
+        Observable<PhotoDatas.PhotoLocationInfo> fetchPhotoLocation(@Query("photo_id") String photoId);
     }
 
     public static class PhotoDatas {
@@ -92,10 +112,23 @@ public class FlickrObservable {
             public Photo photo;
 
             public static class Photo {
-                public Content description;
+                String id;
+                Content description;
                 Content title;
+                Owner owner;
+           }
+        }
 
+        public static class Owner {
+            String username;
+        }
 
+        public static class PhotoLocationInfo {
+            public Photo photo;
+            public static class Photo{
+                double latitude;
+                double longitude;
+                float accuracy;
             }
         }
     }

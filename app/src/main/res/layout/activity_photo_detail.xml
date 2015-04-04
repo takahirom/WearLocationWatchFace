@@ -1,5 +1,4 @@
 <com.kogitune.wearlocationwatchface.widget.ObservableScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/scroll_view"
     android:layout_width="match_parent"
@@ -30,24 +29,23 @@
             android:paddingTop="16dp">
 
             <TextView
+                android:id="@+id/photo_description"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Photo search radius(km)"
                 android:textAppearance="@android:style/TextAppearance.Medium" />
 
-            <org.adw.library.widgets.discreteseekbar.DiscreteSeekBar
-                android:id="@+id/search_radius"
+            <TextView
+                android:id="@+id/photo_owner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:dsb_max="25"
-                app:dsb_min="5" />
+                android:textAppearance="@android:style/TextAppearance.Medium" />
 
-            <android.support.v7.widget.SwitchCompat
-                android:id="@+id/switch_text_accent"
+            <TextView
+                android:id="@+id/photo_place"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Time text accent. " />
+                android:textAppearance="@android:style/TextAppearance.Medium" />
+
         </LinearLayout>
 
         <android.support.v7.widget.Toolbar

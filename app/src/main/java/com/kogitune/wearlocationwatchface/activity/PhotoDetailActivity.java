@@ -7,6 +7,7 @@ import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,6 +23,7 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -31,6 +33,7 @@ import com.kogitune.activity_transition.ActivityTransition;
 import com.kogitune.activity_transition.ExitActivityTransition;
 import com.kogitune.wearlocationwatchface.R;
 import com.kogitune.wearlocationwatchface.data.PhotoShowInfo;
+import com.kogitune.wearlocationwatchface.observable.FlickrObservable;
 import com.kogitune.wearlocationwatchface.util.LUtils;
 import com.kogitune.wearlocationwatchface.util.UIUtils;
 import com.kogitune.wearlocationwatchface.widget.CheckableFrameLayout;
@@ -60,6 +63,11 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
     CheckableFrameLayout fabButton;
     @InjectView(R.id.details_container)
     View detailsContainer;
+
+    @InjectView(R.id.photo_description)
+    TextView photoDescription;
+    @InjectView(R.id.photo_owner)
+    TextView photoOwner;
     private WearSharedPreference wearPref;
     private LUtils lUtil;
     private int photoHeightPixels;
@@ -108,6 +116,13 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
             return;
         }
         exitActivityTransition.exit(this);
+
+        new FlickrObservable(this).fetchPhotoLocation(photoShowInfo.id).subscribe(new Action1<Location>() {
+            @Override
+            public void call(Location location) {
+                // add location info
+            }
+        });
     }
 
     private void setupViews() {
@@ -136,7 +151,8 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
             showStarred(starredReverse, true);
         });
 
-
+        photoDescription.setText(photoShowInfo.description);
+        photoOwner.setText(photoShowInfo.username);
         setupPhotoAndApplyTheme();
 
     }
