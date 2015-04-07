@@ -117,12 +117,6 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         }
         exitActivityTransition.exit(this);
 
-        new FlickrObservable(this).fetchPhotoLocation(photoShowInfo.id).subscribe(new Action1<Location>() {
-            @Override
-            public void call(Location location) {
-                // add location info
-            }
-        });
     }
 
     private void setupViews() {
@@ -154,6 +148,13 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         photoDescription.setText(photoShowInfo.description);
         photoOwner.setText(photoShowInfo.username);
         setupPhotoAndApplyTheme();
+
+        new FlickrObservable(this).fetchPhotoLocation(photoShowInfo.id).subscribe(new Action1<Location>() {
+            @Override
+            public void call(Location location) {
+                Toast.makeText(PhotoDetailActivity.this,location.toString(),Toast.LENGTH_LONG).show();
+            }
+        });
 
     }
 

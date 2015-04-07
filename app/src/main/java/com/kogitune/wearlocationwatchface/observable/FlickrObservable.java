@@ -40,7 +40,7 @@ public class FlickrObservable {
 
         RestAdapter restAdapter = new RestAdapter.Builder()
                 .setEndpoint(WEB_SERVICE_BASE_URL)
-                //.setLogLevel(RestAdapter.LogLevel.FULL)
+                .setLogLevel(RestAdapter.LogLevel.FULL)
                 .build();
         mWebService = restAdapter.create(FlickrService.class);
     }
