@@ -45,14 +45,17 @@ public class FlickrObservable {
         mWebService = restAdapter.create(FlickrService.class);
     }
 
-    public Observable<Location> fetchPhotoLocation(String pohotoId){
-        return mWebService.fetchPhotoLocation(pohotoId).map(new Func1<PhotoDatas.PhotoLocationInfo, Location>() {
+    public Observable<Location> fetchPhotoLocation(String photoId){
+        return mWebService.fetchPhotoLocation(photoId).map(new Func1<PhotoDatas.PhotoLocationInfo, Location>() {
             @Override
             public Location call(PhotoDatas.PhotoLocationInfo photoLocationInfo) {
                 final Location location = new Location("");
-                location.setLatitude(photoLocationInfo.photo.latitude);
-                location.setLongitude(photoLocationInfo.photo.longitude);
-                location.setAccuracy(photoLocationInfo.photo.accuracy);
+                location.setLatitude(Double.parseDouble(photoLocationInfo.photo.location.latitude));
+                location.setLongitude(Double.parseDouble(photoLocationInfo.photo.location.longitude));
+                location.setAccuracy(Float.parseFloat(photoLocationInfo.photo.location.accuracy));
+                Log.d(TAG, "latitude" + photoLocationInfo.photo.location.latitude);
+                Log.d(TAG, "latitude" + photoLocationInfo.photo.location.longitude);
+                Log.d(TAG, "accuracy" + photoLocationInfo.photo.location.accuracy);
                 return location;
             }
         });
@@ -126,9 +129,12 @@ public class FlickrObservable {
         public static class PhotoLocationInfo {
             public Photo photo;
             public static class Photo{
-                double latitude;
-                double longitude;
-                float accuracy;
+                Location location;
+                public static class Location{
+                    String latitude;
+                    String longitude;
+                    String accuracy;
+                }
             }
         }
     }

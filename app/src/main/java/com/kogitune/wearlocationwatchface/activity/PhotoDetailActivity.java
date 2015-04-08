@@ -45,6 +45,7 @@ import butterknife.InjectView;
 import io.codetail.animation.SupportAnimator;
 import io.codetail.animation.ViewAnimationUtils;
 import rx.android.content.ContentObservable;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
 
 public class PhotoDetailActivity extends ActionBarActivity implements ObservableScrollView.Callbacks {
@@ -149,10 +150,15 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         photoOwner.setText(photoShowInfo.username);
         setupPhotoAndApplyTheme();
 
-        new FlickrObservable(this).fetchPhotoLocation(photoShowInfo.id).subscribe(new Action1<Location>() {
+        new FlickrObservable(this).fetchPhotoLocation(photoShowInfo.id).observeOn(AndroidSchedulers.mainThread()).subscribeOn(AndroidSchedulers.mainThread()).subscribe(new Action1<Location>() {
             @Override
             public void call(Location location) {
-                Toast.makeText(PhotoDetailActivity.this,location.toString(),Toast.LENGTH_LONG).show();
+                Toast.makeText(PhotoDetailActivity.this, location.toString(), Toast.LENGTH_LONG).show();
+            }
+        }, new Action1<Throwable>() {
+            @Override
+            public void call(Throwable throwable) {
+                throwable.printStackTrace();
             }
         });
 
