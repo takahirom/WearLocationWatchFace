@@ -32,18 +32,34 @@
                 android:id="@+id/photo_description"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:layout_marginTop="4dp"
+                android:drawableLeft="@drawable/ic_description_black_36dp"
+                android:drawablePadding="16dp"
+                android:gravity="center_vertical"
+                android:text="No description"
                 android:textAppearance="@android:style/TextAppearance.Medium" />
 
             <TextView
                 android:id="@+id/photo_owner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:layout_marginTop="4dp"
+                android:drawableLeft="@drawable/ic_person_black_36dp"
+                android:drawablePadding="16dp"
+                android:gravity="center_vertical"
                 android:textAppearance="@android:style/TextAppearance.Medium" />
 
             <TextView
                 android:id="@+id/photo_place"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:layout_marginTop="4dp"
+                android:drawableLeft="@drawable/ic_place_black_36dp"
+                android:drawablePadding="16dp"
+                android:gravity="center_vertical"
                 android:textAppearance="@android:style/TextAppearance.Medium" />
 
         </LinearLayout>

@@ -53,9 +53,6 @@ public class FlickrObservable {
                 location.setLatitude(Double.parseDouble(photoLocationInfo.photo.location.latitude));
                 location.setLongitude(Double.parseDouble(photoLocationInfo.photo.location.longitude));
                 location.setAccuracy(Float.parseFloat(photoLocationInfo.photo.location.accuracy));
-                Log.d(TAG, "latitude" + photoLocationInfo.photo.location.latitude);
-                Log.d(TAG, "latitude" + photoLocationInfo.photo.location.longitude);
-                Log.d(TAG, "accuracy" + photoLocationInfo.photo.location.accuracy);
                 return location;
             }
         });

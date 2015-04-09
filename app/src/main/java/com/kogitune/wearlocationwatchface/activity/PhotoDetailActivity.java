@@ -69,6 +69,9 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
     TextView photoDescription;
     @InjectView(R.id.photo_owner)
     TextView photoOwner;
+    @InjectView(R.id.photo_place)
+    TextView photoPlace;
+
     private WearSharedPreference wearPref;
     private LUtils lUtil;
     private int photoHeightPixels;
@@ -153,7 +156,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         new FlickrObservable(this).fetchPhotoLocation(photoShowInfo.id).observeOn(AndroidSchedulers.mainThread()).subscribeOn(AndroidSchedulers.mainThread()).subscribe(new Action1<Location>() {
             @Override
             public void call(Location location) {
-                Toast.makeText(PhotoDetailActivity.this, location.toString(), Toast.LENGTH_LONG).show();
+                photoPlace.setText(location.getLongitude() + "," + location.getLatitude());
             }
         }, new Action1<Throwable>() {
             @Override

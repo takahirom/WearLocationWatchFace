@@ -16,7 +16,7 @@
 
         <include
             android:id="@+id/tool_bar"
-            layout="@layout/tool_bar"></include>
+            layout="@layout/tool_bar" />
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/photo_list"
