@@ -31,7 +31,7 @@
         <org.adw.library.widgets.discreteseekbar.DiscreteSeekBar
             android:id="@+id/search_radius"
             app:dsb_max="25"
-            app:dsb_min="5"
+            app:dsb_min="2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
