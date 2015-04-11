@@ -162,23 +162,15 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
                 lastGeoLocation = location.getLatitude() + "," + location.getLongitude();
                 photoPlace.setText(lastGeoLocation);
             }
-        }, new Action1<Throwable>() {
-            @Override
-            public void call(Throwable throwable) {
-                throwable.printStackTrace();
-            }
-        });
+        }, throwable -> throwable.printStackTrace());
 
-        photoPlace.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (lastGeoLocation == null) {
-                    return;
-                }
-                final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:" + lastGeoLocation + "?q=" + lastGeoLocation + "(" + photoShowInfo.title + ")"));
-                startActivity(intent);
-
+        photoPlace.setOnClickListener(v -> {
+            if (lastGeoLocation == null) {
+                return;
             }
+            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:" + lastGeoLocation + "?q=" + lastGeoLocation + "(" + photoShowInfo.title + ")"));
+            startActivity(intent);
+
         });
 
     }
@@ -324,25 +316,22 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
                         | DownloadManager.Request.NETWORK_MOBILE);
 
         final long downloadId = downloadManager.enqueue(request);
-        ContentObservable.fromBroadcast(this, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)).subscribe(new Action1<Intent>() {
-            @Override
-            public void call(Intent intent) {
-                long referenceId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-                if (downloadId != referenceId) {
-                    return;
-                }
-
-                Intent openFileIntent = new Intent();
-                openFileIntent.setAction(Intent.ACTION_VIEW);
-                openFileIntent.setDataAndType(downloadManager.getUriForDownloadedFile(downloadId), "image/*");
-                startActivity(openFileIntent);
-
-                Toast toast = Toast.makeText(PhotoDetailActivity.this,
-                        "Downloading of data just finished", Toast.LENGTH_LONG);
-                toast.setGravity(Gravity.TOP, 25, 400);
-                toast.show();
-
+        ContentObservable.fromBroadcast(this, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)).subscribe(intent -> {
+            long referenceId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
+            if (downloadId != referenceId) {
+                return;
             }
+
+            Intent openFileIntent = new Intent();
+            openFileIntent.setAction(Intent.ACTION_VIEW);
+            openFileIntent.setDataAndType(downloadManager.getUriForDownloadedFile(downloadId), "image/*");
+            startActivity(openFileIntent);
+
+            Toast toast = Toast.makeText(PhotoDetailActivity.this,
+                    "Downloading of data just finished", Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.TOP, 25, 400);
+            toast.show();
+
         });
 
     }
@@ -350,15 +339,12 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
     @Override
     protected void onStart() {
         super.onStart();
-        wearPref.registerOnPreferenceChangeListener(new WearSharedPreference.OnPreferenceChangeListener() {
-            @Override
-            public void onPreferenceChange(WearSharedPreference preference, String key, Bundle bundle) {
-                if (!TextUtils.equals(getString(R.string.key_preference_photo_ids), key)) {
-                    return;
-                }
-                final String photoUrl = bundle.getString(key);
-                //setPhotoAndApplyTheme(photoUrl);
+        wearPref.registerOnPreferenceChangeListener((preference, key, bundle) -> {
+            if (!TextUtils.equals(getString(R.string.key_preference_photo_ids), key)) {
+                return;
             }
+            final String photoUrl = bundle.getString(key);
+            //setPhotoAndApplyTheme(photoUrl);
         });
     }
 
