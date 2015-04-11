@@ -36,7 +36,9 @@ public class OnSubscribeLocation implements Observable.OnSubscribe<Location> {
         }
 
         final Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleAPIClient);
-        if (lastLocation != null) {
+        final long locationGetTime = lastLocation.getTime();
+        if (lastLocation != null && System.currentTimeMillis() - locationGetTime < 1000 * 60 * 60) {
+            // use last location
             subscriber.onNext(lastLocation);
             subscriber.onCompleted();
             return;
