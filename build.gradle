@@ -8,7 +8,14 @@ buildscript {
     }
 }
 
-apply from:'keys.gradle'
+def flickrApiKey
+try{
+    apply from:'keys.gradle'
+    flickrApiKey = project.FLICKR_API_KEY
+}catch(e){
+    // from Flickr API page
+    flickrApiKey = "9a0554259914a86fb9e7eb014e4e5d52"
+}
 allprojects {
     repositories {
         jcenter()
@@ -19,7 +26,7 @@ allprojects {
                 return;
             }
             project.android.defaultConfig.with {
-                buildConfigField 'String', "FLICKR_API_KEY", "\"" + project.FLICKR_API_KEY + "\""
+                buildConfigField 'String', "FLICKR_API_KEY", "\"" + flickrApiKey + "\""
                 resValue "string", "key_preference_photo_ids", "key_preference_photo_ids"
                 resValue "string", "key_preference_search_range", "key_preference_search_range"
                 resValue "string", "key_preference_time_text_accent", "key_preference_time_text_accent"
