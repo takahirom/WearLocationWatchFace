@@ -89,6 +89,8 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
     private int oldPhotoHashCode;
     private PhotoShowInfo photoShowInfo;
     private ExitActivityTransition exitActivityTransition;
+    private String lastGeoLocation;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -156,12 +158,26 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         new FlickrObservable(this).fetchPhotoLocation(photoShowInfo.id).observeOn(AndroidSchedulers.mainThread()).subscribeOn(AndroidSchedulers.mainThread()).subscribe(new Action1<Location>() {
             @Override
             public void call(Location location) {
-                photoPlace.setText(location.getLongitude() + "," + location.getLatitude());
+
+                lastGeoLocation = location.getLatitude() + "," + location.getLongitude();
+                photoPlace.setText(lastGeoLocation);
             }
         }, new Action1<Throwable>() {
             @Override
             public void call(Throwable throwable) {
                 throwable.printStackTrace();
+            }
+        });
+
+        photoPlace.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (lastGeoLocation == null) {
+                    return;
+                }
+                final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:" + lastGeoLocation + "?q=" + lastGeoLocation + "(" + photoShowInfo.title + ")"));
+                startActivity(intent);
+
             }
         });
 
