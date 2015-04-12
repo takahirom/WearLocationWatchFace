@@ -83,12 +83,13 @@ public class WatchFaceService extends CanvasWatchFaceService implements WearShar
                     int range = new WearSharedPreference(this).get(getString(R.string.key_preference_search_range), getResources().getInteger(R.integer.search_range_default));
                     return "https://api.flickr.com/services/rest/?method=flickr.photos.search&group_id=1463451@N25&api_key=" + BuildConfig.FLICKR_API_KEY + "&license=1%2C2%2C3%2C4%2C5%2C6&lat=" + location.getLatitude() + "&lon=" + location.getLongitude() + "&radius=" + range + "&extras=url_n,url_l&per_page=30&format=json&nojsoncallback=1";
                 }).flatMap(url -> GoogleApiClientObservable.fetchText(this, url))
-                .timeout(10, TimeUnit.SECONDS)
+                .timeout(15, TimeUnit.SECONDS)
                 .observeOn(mainThread())
                 .subscribeOn(mainThread())
                 .subscribe(this::applyView,
                         e -> {
                             floatingActionBarManager.stopRefresh();
+                            Toast.makeText(WatchFaceService.this,"Can't get photo in time.",Toast.LENGTH_SHORT);
                             e.printStackTrace();
                         });
     }
@@ -96,7 +97,6 @@ public class WatchFaceService extends CanvasWatchFaceService implements WearShar
     private void applyView(String jsonString) {
         try {
             final JSONArray photosArray = new JSONObject(jsonString).getJSONObject("photos").getJSONArray("photo");
-            Log.d(TAG, "photoArray" + photosArray.length() + photosArray);
             if (photosArray.length() == 0) {
                 Toast.makeText(WatchFaceService.this, "Photo not found", Toast.LENGTH_LONG).show();
                 floatingActionBarManager.stopRefresh();

@@ -19,7 +19,6 @@ import java.util.Date;
  */
 public class WatchFaceDrawer {
     private final WatchFaceService.WatchFaceEngine watchFaceEngine;
-    float radius = 0;
     private WatchFaceService watchFaceService;
     private Paint whiteMediumFontPaint;
     private Paint whiteBigFontPaint;
@@ -29,7 +28,15 @@ public class WatchFaceDrawer {
     private SimpleDateFormat minuteFormat = new SimpleDateFormat("mm");
     private Bitmap bitmap = null;
     private Bitmap drawingBitmap;
-    private State state;
+    private State state = State.NORMAL;
+    float radius = 0;
+    private WatchFaceLayoutCalculator layoutCalc;
+    private WatchFaceLayoutCalculator drawingLayoutCalc;
+    private Paint bottomPaperPaint;
+
+    enum State {
+        NORMAL,DRAWING,
+    }
 
     public WatchFaceDrawer(WatchFaceService.WatchFaceEngine watchFaceEngine, WatchFaceService watchFaceService) {
         this.watchFaceEngine = watchFaceEngine;
@@ -51,8 +58,12 @@ public class WatchFaceDrawer {
     public void onDraw(final Canvas canvas, final Rect wearRect) {
         // FIXME: Please clean and high performance code
         final Resources res = watchFaceService.getResources();
-        if (drawingBitmap != bitmap) {
+        if (drawingBitmap != bitmap && state != State.DRAWING) {
             state = State.DRAWING;
+            // start Drawing
+
+            layoutCalc = new WatchFaceLayoutCalculator();
+            layoutCalc.calc(res, bitmap, wearRect, watchFaceEngine.getPeekCardPosition().top);
         }
 
         //canvas.drawColor(0, PorterDuff.Mode.CLEAR);
@@ -67,24 +78,16 @@ public class WatchFaceDrawer {
             return;
         }
 
-        final WatchFaceLayoutCalculator layoutCalc = new WatchFaceLayoutCalculator();
 
-        layoutCalc.calc(res, bitmap, wearRect, watchFaceEngine.getPeekCardPosition().top);
         whiteBigFontPaint.setTextSize(layoutCalc.getBigTextSize());
         whiteMediumFontPaint.setTextSize(layoutCalc.getMediumTextSize());
 
         if (drawingBitmap != null) {
             // already have bitmap . draw for animation background
             Paint paint = new Paint();
-            WatchFaceLayoutCalculator drawingCalc = new WatchFaceLayoutCalculator();
-            drawingCalc.calc(res, drawingBitmap, wearRect, watchFaceEngine.getPeekCardPosition().top);
-            canvas.drawBitmap(drawingBitmap, null, new Rect(0, 0, drawingCalc.getLocationImageWidth(), drawingCalc.getLocationImageHeight()), paint);
+            canvas.drawBitmap(drawingBitmap, null, new Rect(0, 0, drawingLayoutCalc.getLocationImageWidth(), drawingLayoutCalc.getLocationImageHeight()), paint);
 
-            // draw paper
-            final Paint bottomPaperPaint = new Paint();
-            bottomPaperPaint.setColor(drawingCalc.getBottomPaperColor());
-            bottomPaperPaint.setAntiAlias(true);
-            bottomPaperPaint.setShadowLayer(12, 0, -2, 0xFF000000);
+
             canvas.drawRect(0, layoutCalc.getBottomPaperTop(), wearRect.right, wearRect.bottom, bottomPaperPaint);
         }
 
@@ -128,6 +131,15 @@ public class WatchFaceDrawer {
                 radius = 0;
                 state = State.NORMAL;
                 drawingBitmap = bitmap;
+
+                drawingLayoutCalc = new WatchFaceLayoutCalculator();
+                drawingLayoutCalc.calc(res, drawingBitmap, wearRect, watchFaceEngine.getPeekCardPosition().top);
+
+                // draw paper
+                bottomPaperPaint = new Paint();
+                bottomPaperPaint.setColor(drawingLayoutCalc.getBottomPaperColor());
+                bottomPaperPaint.setAntiAlias(true);
+                bottomPaperPaint.setShadowLayer(12, 0, -2, 0xFF000000);
             }
             watchFaceEngine.invalidate();
         }
@@ -136,7 +148,7 @@ public class WatchFaceDrawer {
     private void drawRefreshCircle(WatchFaceLayoutCalculator layoutCalc, Canvas canvas, Rect wearRect) {
         drawCirclePhoto(layoutCalc, canvas, wearRect);
         drawCirclePaper(layoutCalc, canvas, wearRect);
-        radius += wearRect.width() / 2;
+        radius += wearRect.width() / 3;
     }
 
     private void drawCirclePaper(WatchFaceLayoutCalculator layoutCalc, Canvas canvas, Rect wearRect) {
@@ -208,9 +220,6 @@ public class WatchFaceDrawer {
         return new Rect(x, (int) y, x + bounds.width(), (int) (y + bounds.height()));
     }
 
-    enum State {
-        DRAWING, NORMAL,
-    }
 
 
 }

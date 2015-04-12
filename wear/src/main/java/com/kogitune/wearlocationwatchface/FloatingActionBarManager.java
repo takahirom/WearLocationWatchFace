@@ -1,17 +1,13 @@
 package com.kogitune.wearlocationwatchface;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.PixelFormat;
-import android.support.annotation.InterpolatorRes;
 import android.support.wearable.view.CircledImageView;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
-import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.FrameLayout;
@@ -71,19 +67,7 @@ public class FloatingActionBarManager {
     }
 
     public void stopRefresh() {
-        final RotateAnimation rotateAnimation = new RotateAnimation(0f, 360f, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-
-        rotateAnimation.setStartOffset(0);
-        rotateAnimation.setDuration(500);
-        final AccelerateInterpolator interpolator = new AccelerateInterpolator();
-        rotateAnimation.setInterpolator(new Interpolator() {
-            @Override
-            public float getInterpolation(float input) {
-                return 1 - interpolator.getInterpolation(input);
-            }
-        });
-
-        circledImageView.startAnimation(rotateAnimation);
+        circledImageView.clearAnimation();
     }
 
     public void problemStopRefresh() {
