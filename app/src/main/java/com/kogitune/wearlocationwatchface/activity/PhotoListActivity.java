@@ -24,6 +24,7 @@ import com.kogitune.wearlocationwatchface.util.UIUtils;
 import com.kogitune.wearsharedpreference.WearSharedPreference;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import butterknife.ButterKnife;
@@ -58,6 +59,8 @@ public class PhotoListActivity extends RxActionBarActivity {
     RecyclerView.LayoutManager menuLayoutManager;
 
     ActionBarDrawerToggle drawerToggle;
+    PhotoListAdapter photoListAdapter;
+    RecyclerView.LayoutManager photoLayoutManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,19 +79,35 @@ public class PhotoListActivity extends RxActionBarActivity {
         setupDrawer();
 
         startFirstAnimation();
-        setupPhotoList();
+
+        photoListAdapter = new PhotoListAdapter();
+        photoListRecyclerView.setAdapter(photoListAdapter);
+        photoListRecyclerView.setHasFixedSize(true);
+
+        photoLayoutManager = new LinearLayoutManager(this);
+        photoListRecyclerView.setLayoutManager(photoLayoutManager);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setupPhotoList();
+    }
 
     private void setupPhotoList() {
         final WearSharedPreference wearSharedPreference = new WearSharedPreference(this);
         final String photoIds = wearSharedPreference.get(getString(R.string.key_preference_photo_ids), "");
         final String[] photoIdArray = photoIds.split(",");
+        ArrayList list = new ArrayList();
+        final List<String> photoIdList = new ArrayList<>(Arrays.asList(photoIdArray));
 
-        final PhotoListAdapter photoListAdapter = new PhotoListAdapter();
-        photoListRecyclerView.setAdapter(photoListAdapter);
+        final int itemCount = photoListAdapter.getItemCount();
+        for (int i = 0; i < itemCount; i++) {
+            photoIdList.remove(0);
+        }
+
         final long startTime = AnimationUtils.currentAnimationTimeMillis();
-        LifecycleObservable.bindActivityLifecycle(lifecycle(), Observable.from(photoIdArray).concatMap(new Func1<String, Observable<PhotoShowInfo>>() {
+        LifecycleObservable.bindActivityLifecycle(lifecycle(), Observable.from(photoIdList).concatMap(new Func1<String, Observable<PhotoShowInfo>>() {
             @Override
             public Observable<PhotoShowInfo> call(String s) {
                 return new FlickrObservable(PhotoListActivity.this).fetchPhotoInfo(s);
@@ -121,10 +140,7 @@ public class PhotoListActivity extends RxActionBarActivity {
             }
         });
 
-        photoListRecyclerView.setHasFixedSize(true);
 
-        menuLayoutManager = new LinearLayoutManager(this);
-        photoListRecyclerView.setLayoutManager(menuLayoutManager);
     }
 
     private void startFirstAnimation() {
