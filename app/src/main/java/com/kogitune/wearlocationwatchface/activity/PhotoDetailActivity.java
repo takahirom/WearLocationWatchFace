@@ -46,6 +46,7 @@ import io.codetail.animation.SupportAnimator;
 import io.codetail.animation.ViewAnimationUtils;
 import rx.android.content.ContentObservable;
 import rx.android.schedulers.AndroidSchedulers;
+import rx.android.view.ViewObservable;
 import rx.functions.Action1;
 
 public class PhotoDetailActivity extends ActionBarActivity implements ObservableScrollView.Callbacks {
@@ -143,7 +144,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         fabButton.setScaleY(0);
         fabButton.animate().scaleX(1).scaleY(1).setInterpolator(new AccelerateDecelerateInterpolator()).setDuration(DURATION);
 
-        fabButton.setOnClickListener(view -> {
+        ViewObservable.clicks(fabButton).subscribe(view -> {
             if (!starred) {
                 downloadAndOpen(photoShowInfo.url);
             }
@@ -164,7 +165,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
             }
         }, throwable -> throwable.printStackTrace());
 
-        photoPlace.setOnClickListener(v -> {
+        ViewObservable.clicks(photoPlace).subscribe(v -> {
             if (lastGeoLocation == null) {
                 return;
             }
