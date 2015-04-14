@@ -48,10 +48,11 @@ import rx.android.content.ContentObservable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.android.view.ViewObservable;
 import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 public class PhotoDetailActivity extends ActionBarActivity implements ObservableScrollView.Callbacks {
 
-    private static final String TAG = "MainActivity";
+    private static final String TAG = "PhotoDetailActivity";
     private static final float PHOTO_ASPECT_RATIO = 1.5f;
     public static final int DURATION = 500;
     // views
@@ -79,7 +80,6 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
 
     // flags
     private boolean starred;
-    private boolean hasPhoto = false;
 
     // sizes
     private int maxHeaderElevation;
@@ -133,7 +133,6 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         toolbar.getMenu().clear();
         setSupportActionBar(toolbar);
 
-
         scrollView.addCallbacks(this);
         scrollView.getViewTreeObserver().addOnPreDrawListener(mGlobalLayoutListener);
 
@@ -156,7 +155,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         photoOwner.setText(photoShowInfo.username);
         setupPhotoAndApplyTheme();
 
-        new FlickrObservable(this).fetchPhotoLocation(photoShowInfo.id).observeOn(AndroidSchedulers.mainThread()).subscribeOn(AndroidSchedulers.mainThread()).subscribe(new Action1<Location>() {
+        new FlickrObservable(this).fetchPhotoLocation(photoShowInfo.id).observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribe(new Action1<Location>() {
             @Override
             public void call(Location location) {
 
@@ -242,7 +241,6 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
                     @Override
                     public void onResourceReady(Bitmap bitmap, GlideAnimation anim) {
                         super.onResourceReady(bitmap, anim);
-                        hasPhoto = true;
                         Palette.generateAsync(bitmap, PhotoDetailActivity.this::applyTheme);
                     }
                 });
