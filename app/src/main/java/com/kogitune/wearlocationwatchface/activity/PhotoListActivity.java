@@ -7,6 +7,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.widget.TextView;
@@ -61,6 +62,7 @@ public class PhotoListActivity extends RxActionBarActivity {
     ActionBarDrawerToggle drawerToggle;
     PhotoListAdapter photoListAdapter;
     RecyclerView.LayoutManager photoLayoutManager;
+    private WearSharedPreference wearPref;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,6 +88,8 @@ public class PhotoListActivity extends RxActionBarActivity {
 
         photoLayoutManager = new LinearLayoutManager(this);
         photoListRecyclerView.setLayoutManager(photoLayoutManager);
+
+        wearPref = new WearSharedPreference(this);
     }
 
     @Override
@@ -184,5 +188,22 @@ public class PhotoListActivity extends RxActionBarActivity {
         };
         drawer.setDrawerListener(drawerToggle);
         drawerToggle.syncState();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        wearPref.registerOnPreferenceChangeListener((preference, key, bundle) -> {
+            if (!TextUtils.equals(getString(R.string.key_preference_photo_ids), key)) {
+                return;
+            }
+            final String photoUrl = bundle.getString(key);
+        });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        wearPref.unregisterOnPreferenceChangeListener();
     }
 }

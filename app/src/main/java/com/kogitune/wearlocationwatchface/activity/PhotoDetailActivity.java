@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.Uri;
@@ -15,7 +16,6 @@ import android.support.v4.view.ViewCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -26,9 +26,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.animation.GlideAnimation;
-import com.bumptech.glide.request.target.BitmapImageViewTarget;
 import com.kogitune.activity_transition.ActivityTransition;
 import com.kogitune.activity_transition.ExitActivityTransition;
 import com.kogitune.wearlocationwatchface.R;
@@ -132,6 +129,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         toolbar.setTitle(photoShowInfo.title);
         toolbar.getMenu().clear();
         setSupportActionBar(toolbar);
+        applyTheme();
 
         scrollView.addCallbacks(this);
         scrollView.getViewTreeObserver().addOnPreDrawListener(mGlobalLayoutListener);
@@ -179,7 +177,6 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         scrollView.getViewTreeObserver().removeOnPreDrawListener(mGlobalLayoutListener);
         headerHeightPixels = toolbar.getHeight();
 
-        photoHeightPixels = 0;
         photoHeightPixels = photoImageView.getHeight();
 
         ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams)
@@ -233,17 +230,10 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         //setPhotoAndApplyTheme(beforePhotoUrl);
     }
 
-    private void setPhotoAndApplyTheme(String beforePhotoUrl) {
-        Glide.with(this)
-                .load(beforePhotoUrl)
-                .asBitmap()
-                .into(new BitmapImageViewTarget(photoImageView) {
-                    @Override
-                    public void onResourceReady(Bitmap bitmap, GlideAnimation anim) {
-                        super.onResourceReady(bitmap, anim);
-                        Palette.generateAsync(bitmap, PhotoDetailActivity.this::applyTheme);
-                    }
-                });
+    private void applyTheme() {
+        final Drawable drawable = photoImageView.getDrawable();
+        final Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
+        Palette.generateAsync(bitmap, PhotoDetailActivity.this::applyTheme);
     }
 
     private void applyTheme(Palette palette) {
@@ -335,21 +325,5 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
 
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        wearPref.registerOnPreferenceChangeListener((preference, key, bundle) -> {
-            if (!TextUtils.equals(getString(R.string.key_preference_photo_ids), key)) {
-                return;
-            }
-            final String photoUrl = bundle.getString(key);
-            //setPhotoAndApplyTheme(photoUrl);
-        });
-    }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        wearPref.unregisterOnPreferenceChangeListener();
-    }
 }
