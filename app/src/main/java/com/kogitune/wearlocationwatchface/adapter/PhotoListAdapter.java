@@ -84,6 +84,11 @@ public class PhotoListAdapter extends RecyclerView.Adapter<PhotoListAdapter.View
         }
     }
 
+    public void addNewPhoto(PhotoShowInfo photoShowInfo) {
+        photoShowInfoList.add(0, photoShowInfo);
+        notifyItemInserted(0);
+    }
+
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView textView;

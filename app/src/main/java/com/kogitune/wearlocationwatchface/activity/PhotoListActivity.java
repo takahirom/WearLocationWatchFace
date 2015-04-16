@@ -62,7 +62,9 @@ public class PhotoListActivity extends RxActionBarActivity {
     ActionBarDrawerToggle drawerToggle;
     PhotoListAdapter photoListAdapter;
     RecyclerView.LayoutManager photoLayoutManager;
+
     private WearSharedPreference wearPref;
+    private FlickrObservable flickrObservable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +90,7 @@ public class PhotoListActivity extends RxActionBarActivity {
 
         photoLayoutManager = new LinearLayoutManager(this);
         photoListRecyclerView.setLayoutManager(photoLayoutManager);
+        flickrObservable = new FlickrObservable(PhotoListActivity.this);
 
         wearPref = new WearSharedPreference(this);
     }
@@ -112,9 +115,10 @@ public class PhotoListActivity extends RxActionBarActivity {
 
         final long startTime = AnimationUtils.currentAnimationTimeMillis();
         LifecycleObservable.bindActivityLifecycle(lifecycle(), Observable.from(photoIdList).concatMap(new Func1<String, Observable<PhotoShowInfo>>() {
+
             @Override
             public Observable<PhotoShowInfo> call(String s) {
-                return new FlickrObservable(PhotoListActivity.this).fetchPhotoInfo(s);
+                return flickrObservable.fetchPhotoInfo(s);
             }
         })).map(new Func1<PhotoShowInfo, PhotoShowInfo>() {
             @Override
@@ -197,7 +201,17 @@ public class PhotoListActivity extends RxActionBarActivity {
             if (!TextUtils.equals(getString(R.string.key_preference_photo_ids), key)) {
                 return;
             }
-            final String photoUrl = bundle.getString(key);
+            final String ids = bundle.getString(key);
+            if (TextUtils.isEmpty(ids)){
+                return;
+            }
+            final String addedId = ids.split(",")[0];
+            flickrObservable.fetchPhotoInfo(addedId).subscribe(new Action1<PhotoShowInfo>() {
+                @Override
+                public void call(PhotoShowInfo photoShowInfo) {
+                    photoListAdapter.addNewPhoto(photoShowInfo);
+                }
+            });
         });
     }
 
