@@ -44,9 +44,7 @@ public class SettingActivity extends RxActionBarActivity {
                 .flatMap(b ->
                         Observable.create(new OnSubscribeWearSharedPreferences(SettingActivity.this, getString(R.string.key_preference_time_text_accent), b)))
                 .subscribe((subscriber) -> {
-                }, throwable -> {
-                    throwable.printStackTrace();
-                });
+                }, Throwable::printStackTrace);
 
         int firstRadius = wearPref.get(getString(R.string.key_preference_search_range), res.getInteger(R.integer.search_range_default));
         searchRadiusSeekBar.setProgress(firstRadius);
