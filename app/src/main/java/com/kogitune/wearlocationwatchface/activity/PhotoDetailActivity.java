@@ -41,10 +41,12 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 import io.codetail.animation.SupportAnimator;
 import io.codetail.animation.ViewAnimationUtils;
+import rx.Observable;
 import rx.android.content.ContentObservable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.android.view.ViewObservable;
 import rx.functions.Action1;
+import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 
 public class PhotoDetailActivity extends ActionBarActivity implements ObservableScrollView.Callbacks {
@@ -297,31 +299,34 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         final DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
 
         Uri downloadUri = Uri.parse(url);
-        DownloadManager.Request request = new DownloadManager.Request(
-                downloadUri);
+        Observable.zip(
+                ContentObservable
+                        .fromBroadcast(this, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)),
+                Observable.just(downloadUri)
+                        .map(uri -> new DownloadManager.Request(downloadUri))
+                        .doOnNext(request -> request.setAllowedNetworkTypes(
+                                DownloadManager.Request.NETWORK_WIFI
+                                        | DownloadManager.Request.NETWORK_MOBILE))
+                        .map(request -> downloadManager.enqueue(request)),
+                new Func2<Intent, Long, Long>() {
+                    @Override
+                    public Long call(Intent intent, Long downloadId) {
+                        return intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) == downloadId ? downloadId : null;
+                    }
+                }).filter(downloadId->downloadId!=null)
+                .subscribe(downloadId->{
+                    Intent openFileIntent = new Intent();
+                    openFileIntent.setAction(Intent.ACTION_VIEW);
+                    openFileIntent.setDataAndType(downloadManager.getUriForDownloadedFile(downloadId), "image/*");
+                    startActivity(openFileIntent);
 
-        request.setAllowedNetworkTypes(
-                DownloadManager.Request.NETWORK_WIFI
-                        | DownloadManager.Request.NETWORK_MOBILE);
+                    Toast toast = Toast.makeText(PhotoDetailActivity.this,
+                            "Downloading of data just finished", Toast.LENGTH_LONG);
+                    toast.setGravity(Gravity.TOP, 25, 400);
+                    toast.show();
 
-        final long downloadId = downloadManager.enqueue(request);
-        ContentObservable.fromBroadcast(this, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)).subscribe(intent -> {
-            long referenceId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-            if (downloadId != referenceId) {
-                return;
-            }
+                });
 
-            Intent openFileIntent = new Intent();
-            openFileIntent.setAction(Intent.ACTION_VIEW);
-            openFileIntent.setDataAndType(downloadManager.getUriForDownloadedFile(downloadId), "image/*");
-            startActivity(openFileIntent);
-
-            Toast toast = Toast.makeText(PhotoDetailActivity.this,
-                    "Downloading of data just finished", Toast.LENGTH_LONG);
-            toast.setGravity(Gravity.TOP, 25, 400);
-            toast.show();
-
-        });
 
     }
 
