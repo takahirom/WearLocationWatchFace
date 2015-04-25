@@ -299,21 +299,22 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
         final DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
 
         Uri downloadUri = Uri.parse(url);
+        final Observable<Long> downloadObservable = Observable.just(downloadUri)
+                .map(uri -> new DownloadManager.Request(downloadUri))
+                .doOnNext(request -> request.setAllowedNetworkTypes(
+                        DownloadManager.Request.NETWORK_WIFI
+                                | DownloadManager.Request.NETWORK_MOBILE))
+                .map(request -> downloadManager.enqueue(request));
         Observable.zip(
                 ContentObservable
                         .fromBroadcast(this, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)),
-                Observable.just(downloadUri)
-                        .map(uri -> new DownloadManager.Request(downloadUri))
-                        .doOnNext(request -> request.setAllowedNetworkTypes(
-                                DownloadManager.Request.NETWORK_WIFI
-                                        | DownloadManager.Request.NETWORK_MOBILE))
-                        .map(request -> downloadManager.enqueue(request)),
+                downloadObservable,
                 new Func2<Intent, Long, Long>() {
                     @Override
                     public Long call(Intent intent, Long downloadId) {
                         return intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) == downloadId ? downloadId : null;
                     }
-                }).filter(downloadId->downloadId!=null)
+                }).filter(downloadId -> downloadId != null)
                 .subscribe(downloadId->{
                     Intent openFileIntent = new Intent();
                     openFileIntent.setAction(Intent.ACTION_VIEW);

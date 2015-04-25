@@ -105,7 +105,6 @@ public class WatchFaceService extends CanvasWatchFaceService implements WearShar
             final int nextIndex = new Random().nextInt(photosArray.length());
             String photoUrl = photosArray.getJSONObject(nextIndex).getString("url_n").toString();
 
-            Log.d(TAG, "str:" + photoUrl);
             fetchAndApplyPhotoBitmap(photoUrl);
 
             photoId = photosArray.getJSONObject(nextIndex).getString("id").toString();
