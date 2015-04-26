@@ -1,8 +1,10 @@
 package com.kogitune.wearlocationwatchface.google_api_client;
 
 import android.location.Location;
+import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
@@ -12,13 +14,15 @@ import rx.Subscriber;
 /**
  * Created by takam on 2015/01/13.
  */
-public class OnSubscribeLocation implements Observable.OnSubscribe<Location> {
+public class OnSubscribeLocation implements Observable.OnSubscribe<Location>,LocationListener {
     private GoogleApiClient googleAPIClient;
     private Subscriber<? super Location> subscriber;
+    private LocationRequest mLocationRequest;
 
 
     public OnSubscribeLocation(GoogleApiClient client) {
         this.googleAPIClient = client;
+        createLocationRequest();
     }
 
     @Override
@@ -36,32 +40,29 @@ public class OnSubscribeLocation implements Observable.OnSubscribe<Location> {
         }
 
         final Location lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleAPIClient);
-        final long locationGetTime = lastLocation.getTime();
-        if (lastLocation != null && System.currentTimeMillis() - locationGetTime < 1000 * 60 * 60) {
+        if (lastLocation != null && System.currentTimeMillis() - lastLocation.getTime() < 1000 * 60 * 10) {
+            Log.d("LocationWatch", "use last location");
             // use last location
             subscriber.onNext(lastLocation);
             subscriber.onCompleted();
             return;
         }
+        Log.d("LocationWatch", "update location");
 
-        LocationServices.FusedLocationApi.requestLocationUpdates(googleAPIClient, buildLocationRequest(), location -> {
-            subscriber.onNext(location);
-            subscriber.onCompleted();
-        });
-
-
+        LocationServices.FusedLocationApi.requestLocationUpdates(googleAPIClient, mLocationRequest, this);
     }
 
-    private LocationRequest buildLocationRequest() {
-        LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setNumUpdates(1);
-        locationRequest.setFastestInterval(5000)
-                .setFastestInterval(5000L)
-                .setInterval(10000L)
-                .setSmallestDisplacement(75.0F);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        return locationRequest;
+    protected void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setNumUpdates(1);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
     }
 
-
+    @Override
+    public void onLocationChanged(Location location) {
+        subscriber.onNext(location);
+        subscriber.onCompleted();
+    }
 }

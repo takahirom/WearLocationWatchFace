@@ -79,6 +79,7 @@ public class WatchFaceDrawer {
         }
 
 
+
         whiteBigFontPaint.setTextSize(layoutCalc.getBigTextSize());
         whiteMediumFontPaint.setTextSize(layoutCalc.getMediumTextSize());
 

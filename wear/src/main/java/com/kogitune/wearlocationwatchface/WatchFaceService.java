@@ -26,6 +26,8 @@ import org.json.JSONObject;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
+import rx.schedulers.Schedulers;
+
 import static rx.android.schedulers.AndroidSchedulers.mainThread;
 
 public class WatchFaceService extends CanvasWatchFaceService implements WearSharedPreference.OnPreferenceChangeListener {
@@ -83,9 +85,9 @@ public class WatchFaceService extends CanvasWatchFaceService implements WearShar
                     int range = new WearSharedPreference(this).get(getString(R.string.key_preference_search_range), getResources().getInteger(R.integer.search_range_default));
                     return "https://api.flickr.com/services/rest/?method=flickr.photos.search&group_id=1463451@N25&api_key=" + BuildConfig.FLICKR_API_KEY + "&license=1%2C2%2C3%2C4%2C5%2C6&lat=" + location.getLatitude() + "&lon=" + location.getLongitude() + "&radius=" + range + "&extras=url_n,url_l&per_page=30&format=json&nojsoncallback=1";
                 }).flatMap(url -> GoogleApiClientObservable.fetchText(this, url))
-                .timeout(15, TimeUnit.SECONDS)
+                .timeout(30, TimeUnit.SECONDS)
                 .observeOn(mainThread())
-                .subscribeOn(mainThread())
+                .subscribeOn(Schedulers.io())
                 .subscribe(this::applyView,
                         e -> {
                             floatingActionBarManager.stopRefresh();

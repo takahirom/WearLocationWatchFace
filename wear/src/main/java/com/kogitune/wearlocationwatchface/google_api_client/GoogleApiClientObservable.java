@@ -13,6 +13,8 @@ import rx.Observable;
  */
 public class GoogleApiClientObservable {
 
+    private static final String TAG = "ApiClientObservable";
+
     public static Observable<GoogleApiClient> connection(Context context) {
         return Observable.create(new OnSubscribeGoogleAPIClientConnection(context));
     }
