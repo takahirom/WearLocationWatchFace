@@ -8,6 +8,7 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.view.WindowInsets;
 
 import com.kogitune.wearsharedpreference.WearSharedPreference;
 
@@ -33,9 +34,14 @@ public class WatchFaceDrawer {
     private WatchFaceLayoutCalculator layoutCalc;
     private WatchFaceLayoutCalculator drawingLayoutCalc;
     private Paint bottomPaperPaint;
+    private WindowInsets insets;
+
+    public void setInsets(WindowInsets insets) {
+        this.insets = insets;
+    }
 
     enum State {
-        NORMAL,DRAWING,
+        NORMAL, DRAWING,
     }
 
     public WatchFaceDrawer(WatchFaceService.WatchFaceEngine watchFaceEngine, WatchFaceService watchFaceService) {
@@ -63,13 +69,19 @@ public class WatchFaceDrawer {
             // start Drawing
 
             layoutCalc = new WatchFaceLayoutCalculator();
-            layoutCalc.calc(res, bitmap, wearRect, watchFaceEngine.getPeekCardPosition().top);
+            layoutCalc.calc(res, bitmap, wearRect, insets, watchFaceEngine.getPeekCardPosition().top);
+            watchFaceService.updateFab(res.getColor(R.color.floating_button_color), layoutCalc.actionButtonX, layoutCalc.actionButtonY);
+            whiteBigFontPaint.setTextSize(layoutCalc.bigTextSize);
+            whiteMediumFontPaint.setTextSize(layoutCalc.mediumTextSize);
+            whiteMediumFontPaint.setColor(layoutCalc.dateTextColor);
+            whiteBigFontPaint.setColor(layoutCalc.timeTextColor);
         }
 
         //canvas.drawColor(0, PorterDuff.Mode.CLEAR);
 
-
         if (bitmap == null) {
+            // for Emergency that bitmap not exists
+
             final int mediumTextSize = 24;
             final int bigTextSize = 72;
             whiteMediumFontPaint.setTextSize(mediumTextSize);
@@ -79,17 +91,13 @@ public class WatchFaceDrawer {
         }
 
 
-
-        whiteBigFontPaint.setTextSize(layoutCalc.getBigTextSize());
-        whiteMediumFontPaint.setTextSize(layoutCalc.getMediumTextSize());
-
         if (drawingBitmap != null) {
             // already have bitmap . draw for animation background
             Paint paint = new Paint();
-            canvas.drawBitmap(drawingBitmap, null, new Rect(0, 0, drawingLayoutCalc.getLocationImageWidth(), drawingLayoutCalc.getLocationImageHeight()), paint);
+            canvas.drawBitmap(drawingBitmap, null, new Rect(0, 0, drawingLayoutCalc.locationImageLayoutWidth, drawingLayoutCalc.locationImageLayoutHeight), paint);
 
 
-            canvas.drawRect(0, layoutCalc.getBottomPaperTop(), wearRect.right, wearRect.bottom, bottomPaperPaint);
+            canvas.drawRect(0, layoutCalc.bottomPaperTop, wearRect.right, wearRect.bottom, bottomPaperPaint);
         }
 
         if (state == State.DRAWING) {
@@ -97,17 +105,13 @@ public class WatchFaceDrawer {
         }
 
 
-        whiteMediumFontPaint.setColor(layoutCalc.getDateTextColor());
-        whiteBigFontPaint.setColor(layoutCalc.getTimeTextColor());
-
-        watchFaceService.updateFab(res.getColor(R.color.floating_button_color), layoutCalc.getActionButtonX(), layoutCalc.getActionButtonY());
 
         // draw time
-        if (layoutCalc.isCenterTimeText()) {
+        if (layoutCalc.isCenterTimeText) {
             final Paint transparentPaint = new Paint(whiteBigFontPaint);
             transparentPaint.setColor(Color.TRANSPARENT);
             // draw for just measure size
-            Rect drawRect = drawCenterText(canvas, transparentPaint, timeFormat.format(new Date()), layoutCalc.getTimeTextTop());
+            Rect drawRect = drawCenterText(canvas, transparentPaint, timeFormat.format(new Date()), layoutCalc.timeTextTop);
             canvas.drawText(hourFormat.format(new Date()), drawRect.left, drawRect.top, whiteBigFontPaint);
 
             final Paint minutePaint = new Paint(whiteBigFontPaint);
@@ -123,10 +127,15 @@ public class WatchFaceDrawer {
 
             canvas.drawText(minute, drawRect.right - minuteRect.width(), drawRect.top, minutePaint);
         } else {
-            canvas.drawText(timeFormat.format(new Date()), 20, layoutCalc.getTimeTextTop(), whiteBigFontPaint);
+            if (insets.isRound()) {
+                canvas.drawText(timeFormat.format(new Date()), 20, layoutCalc.timeTextTop, whiteBigFontPaint);
+            }else{
+                canvas.drawText(timeFormat.format(new Date()), 20, layoutCalc.timeTextTop, whiteBigFontPaint);
+            }
         }
+
         // draw date
-        canvas.drawText(dateFormat.format(new Date()), 20, layoutCalc.getDateTextTop(), whiteMediumFontPaint);
+        canvas.drawText(dateFormat.format(new Date()), 20, layoutCalc.dateTextTop, whiteMediumFontPaint);
         if (state == State.DRAWING) {
             if (radius / 2 > wearRect.width()) {
                 radius = 0;
@@ -134,11 +143,11 @@ public class WatchFaceDrawer {
                 drawingBitmap = bitmap;
 
                 drawingLayoutCalc = new WatchFaceLayoutCalculator();
-                drawingLayoutCalc.calc(res, drawingBitmap, wearRect, watchFaceEngine.getPeekCardPosition().top);
+                drawingLayoutCalc.calc(res, drawingBitmap, wearRect, insets, watchFaceEngine.getPeekCardPosition().top);
 
                 // draw paper
                 bottomPaperPaint = new Paint();
-                bottomPaperPaint.setColor(drawingLayoutCalc.getBottomPaperColor());
+                bottomPaperPaint.setColor(drawingLayoutCalc.bottomPaperColor);
                 bottomPaperPaint.setAntiAlias(true);
                 bottomPaperPaint.setShadowLayer(12, 0, -2, 0xFF000000);
             }
@@ -149,48 +158,48 @@ public class WatchFaceDrawer {
     private void drawRefreshCircle(WatchFaceLayoutCalculator layoutCalc, Canvas canvas, Rect wearRect) {
         drawCirclePhoto(layoutCalc, canvas, wearRect);
         drawCirclePaper(layoutCalc, canvas, wearRect);
-        radius += wearRect.width() / 3;
+        radius += wearRect.width() / 4;
     }
 
     private void drawCirclePaper(WatchFaceLayoutCalculator layoutCalc, Canvas canvas, Rect wearRect) {
-        final float cardHeight = wearRect.bottom - layoutCalc.getBottomPaperTop();
-        Bitmap output = Bitmap.createBitmap(layoutCalc.getLocationImageWidth(),
+        final float cardHeight = wearRect.bottom - layoutCalc.bottomPaperTop;
+        Bitmap output = Bitmap.createBitmap((int) layoutCalc.locationImageLayoutWidth,
                 (int) cardHeight, Bitmap.Config.ARGB_8888);
         Canvas drawingCanvas = new Canvas(output);
         drawingCanvas.drawARGB(0, 0, 0, 0);
 
         final Paint paperCirclePaint = new Paint();
         paperCirclePaint.setAntiAlias(true);
-        paperCirclePaint.setColor(layoutCalc.getBottomPaperColor());
+        paperCirclePaint.setColor(layoutCalc.bottomPaperColor);
         int actionButtonRadius = watchFaceService.getResources().getDimensionPixelSize(R.dimen.action_button_radius);
-        int circleCenterX = layoutCalc.getActionButtonX() + actionButtonRadius;
+        int circleCenterX = layoutCalc.actionButtonX + actionButtonRadius;
         drawingCanvas.drawCircle(circleCenterX, 0, radius, paperCirclePaint);
 
         Paint shadowDrawPaint = new Paint();
         shadowDrawPaint.setShadowLayer(12, 0, -2, 0xFF000000);
-        canvas.drawRect(circleCenterX - radius + 5, layoutCalc.getBottomPaperTop(), circleCenterX + radius - 5, layoutCalc.getBottomPaperTop() + 10, shadowDrawPaint);
+        canvas.drawRect(circleCenterX - radius + 5, layoutCalc.bottomPaperTop, circleCenterX + radius - 5, layoutCalc.bottomPaperTop + 10, shadowDrawPaint);
 
         Paint bitmapDrawPaint = new Paint();
         bitmapDrawPaint.setAntiAlias(true);
-        canvas.drawBitmap(output, 0f, layoutCalc.getBottomPaperTop(), bitmapDrawPaint);
+        canvas.drawBitmap(output, 0f, layoutCalc.bottomPaperTop, bitmapDrawPaint);
 
     }
 
     private void drawCirclePhoto(WatchFaceLayoutCalculator layoutCalc, Canvas canvas, Rect wearRect) {
-        Bitmap output = Bitmap.createBitmap(layoutCalc.getLocationImageWidth(),
-                layoutCalc.getLocationImageHeight(), Bitmap.Config.ARGB_8888);
+        Bitmap output = Bitmap.createBitmap(layoutCalc.locationImageLayoutWidth,
+                layoutCalc.locationImageLayoutHeight, Bitmap.Config.ARGB_8888);
         Canvas drawingCanvas = new Canvas(output);
         final Paint paint = new Paint();
-        final Rect rect = new Rect(0, 0, layoutCalc.getLocationImageWidth(),
-                layoutCalc.getLocationImageHeight());
+        final Rect rect = new Rect(0, 0, layoutCalc.locationImageLayoutWidth,
+                layoutCalc.locationImageLayoutHeight);
 
         paint.setAntiAlias(true);
         paint.setShadowLayer(12, 12, 12, 0xFF555555);
         drawingCanvas.drawARGB(0, 0, 0, 0);
         //paint.setColor(color);
         int actionButtonRadius = watchFaceService.getResources().getDimensionPixelSize(R.dimen.action_button_radius);
-        drawingCanvas.drawCircle(layoutCalc.getActionButtonX() + actionButtonRadius,
-                layoutCalc.getActionButtonY() + actionButtonRadius, radius, paint);
+        drawingCanvas.drawCircle(layoutCalc.actionButtonX + actionButtonRadius,
+                layoutCalc.actionButtonY + actionButtonRadius, radius, paint);
 
         paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
         drawingCanvas.drawBitmap(bitmap, null, rect, paint);
@@ -220,7 +229,6 @@ public class WatchFaceDrawer {
         canvas.drawText(text, x, y, paint);
         return new Rect(x, (int) y, x + bounds.width(), (int) (y + bounds.height()));
     }
-
 
 
 }

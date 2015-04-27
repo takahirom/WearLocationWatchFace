@@ -13,7 +13,9 @@ import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.SurfaceHolder;
 import android.view.View;
+import android.view.WindowInsets;
 import android.widget.Toast;
 
 import com.kogitune.wearlocationwatchface.google_api_client.GoogleApiClientObservable;
@@ -162,14 +164,29 @@ public class WatchFaceService extends CanvasWatchFaceService implements WearShar
     class WatchFaceEngine extends WatchFaceService.Engine {
 
         private final WatchFaceDrawer watchFaceDrawer;
+        private final WatchFaceStyle watchFaceStyle;
 
         public WatchFaceEngine(WatchFaceService watchFaceService) {
             watchFaceDrawer = new WatchFaceDrawer(this, watchFaceService);
-            setWatchFaceStyle(
-                    new WatchFaceStyle.Builder(watchFaceService)
-                            .setCardPeekMode(WatchFaceStyle.PEEK_MODE_SHORT)
-                            .setPeekOpacityMode(WatchFaceStyle.PEEK_OPACITY_MODE_TRANSLUCENT)
-                            .build());
+            watchFaceStyle = new WatchFaceStyle.Builder(WatchFaceService.this)
+                    .setCardPeekMode(WatchFaceStyle.PEEK_MODE_SHORT)
+                    .setAmbientPeekMode(WatchFaceStyle.AMBIENT_PEEK_MODE_HIDDEN)
+                    .setBackgroundVisibility(WatchFaceStyle.BACKGROUND_VISIBILITY_INTERRUPTIVE)
+                    .setShowSystemUiTime(false)
+                    .setPeekOpacityMode(WatchFaceStyle.PEEK_OPACITY_MODE_TRANSLUCENT)
+                    .build();
+            setWatchFaceStyle(watchFaceStyle);
+        }
+
+        @Override
+        public void onCreate(SurfaceHolder holder) {
+            super.onCreate(holder);
+            setWatchFaceStyle(watchFaceStyle);
+        }
+
+        @Override
+        public void onApplyWindowInsets(WindowInsets insets) {
+            watchFaceDrawer.setInsets(insets);
         }
 
         @Override
@@ -180,6 +197,7 @@ public class WatchFaceService extends CanvasWatchFaceService implements WearShar
 
         @Override
         public void onPeekCardPositionUpdate(Rect rect) {
+            setWatchFaceStyle(watchFaceStyle);
             invalidate();
         }
 

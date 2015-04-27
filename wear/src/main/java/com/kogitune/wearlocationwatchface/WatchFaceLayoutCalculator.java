@@ -5,29 +5,28 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.support.v7.graphics.Palette;
-import android.support.wearable.view.CircledImageView;
-import android.util.Log;
+import android.view.WindowInsets;
 
 /**
  * Created by takam on 2015/01/15.
  */
 public class WatchFaceLayoutCalculator {
     private static final String TAG = "LayoutCalculator";
-    private float locationImageLayoutHeight;
-    private float locationImageLayoutWidth;
-    private float bottomPaperTop;
-    private float dateTextTop;
-    private float timeTextTop;
-    private int bottomPaperColor = Color.BLACK;
-    private int dateTextColor = Color.WHITE;
-    private int timeTextColor = Color.WHITE;
-    private int mediumTextSize = 28;
-    private int bigTextSize = 72;
-    private boolean isCenterTimeText = true;
-    private int actionButtonX;
-    private int actionButtonY;
+    public float bottomPaperTop;
+    public int mediumTextSize = 28;
+    public int bigTextSize = 72;
+    public float dateTextTop;
+    public float timeTextTop;
+    public int locationImageLayoutHeight;
+    public int locationImageLayoutWidth;
+    public int bottomPaperColor = Color.BLACK;
+    public int dateTextColor = Color.WHITE;
+    public int timeTextColor = Color.WHITE;
+    public boolean isCenterTimeText = true;
+    public int actionButtonX;
+    public int actionButtonY;
 
-    public void calc(Resources res, Bitmap locationImageBitmap, Rect wearRect, int peekCardPosition) {
+    public void calc(Resources res, Bitmap locationImageBitmap, Rect wearRect, WindowInsets insets, int peekCardPosition) {
         final float imageSizeRate = (float) wearRect.right / locationImageBitmap.getWidth();
         float imageRatio = locationImageBitmap.getWidth() / (float) locationImageBitmap.getHeight();
         final Palette palette = Palette.generate(locationImageBitmap);
@@ -39,8 +38,8 @@ public class WatchFaceLayoutCalculator {
         }
 
         bottomPaperTop = wearRect.bottom / imageRatio - 1;
-        locationImageLayoutHeight = bottomPaperTop + 1;
-        locationImageLayoutWidth = locationImageBitmap.getWidth() * imageSizeRate;
+        locationImageLayoutHeight = (int) (bottomPaperTop + 1);
+        locationImageLayoutWidth = (int) (locationImageBitmap.getWidth() * imageSizeRate);
         if (palette != null) {
             Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
             if (vibrantSwatch != null) {
@@ -92,57 +91,6 @@ public class WatchFaceLayoutCalculator {
         }
     }
 
-    public int getLocationImageHeight() {
-        return (int) locationImageLayoutHeight;
-    }
-
-    public int getLocationImageWidth() {
-        return (int) locationImageLayoutWidth;
-    }
-
-    public float getBottomPaperTop() {
-        return bottomPaperTop;
-    }
-
-    public float getTimeTextTop() {
-        return timeTextTop;
-    }
-
-    public float getDateTextTop() {
-        return dateTextTop;
-    }
-
-    public int getBottomPaperColor() {
-        return bottomPaperColor;
-    }
-
-    public int getDateTextColor() {
-        return dateTextColor;
-    }
-
-    public int getTimeTextColor() {
-        return timeTextColor;
-    }
-
-    public int getBigTextSize() {
-        return bigTextSize;
-    }
-
-    public int getMediumTextSize() {
-        return mediumTextSize;
-    }
-
-    public boolean isCenterTimeText() {
-        return isCenterTimeText;
-    }
-
-    public int getActionButtonX() {
-        return actionButtonX;
-    }
-
-    public int getActionButtonY() {
-        return actionButtonY;
-    }
 }
 
 
