@@ -87,7 +87,7 @@ public class WatchFaceService extends CanvasWatchFaceService implements WearShar
                     int range = new WearSharedPreference(this).get(getString(R.string.key_preference_search_range), getResources().getInteger(R.integer.search_range_default));
                     return "https://api.flickr.com/services/rest/?method=flickr.photos.search&group_id=1463451@N25&api_key=" + BuildConfig.FLICKR_API_KEY + "&license=1%2C2%2C3%2C4%2C5%2C6&lat=" + location.getLatitude() + "&lon=" + location.getLongitude() + "&radius=" + range + "&extras=url_n,url_l&per_page=30&format=json&nojsoncallback=1";
                 }).flatMap(url -> GoogleApiClientObservable.fetchText(this, url))
-                .timeout(30, TimeUnit.SECONDS)
+                .timeout(15, TimeUnit.SECONDS)
                 .observeOn(mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(this::applyView,
