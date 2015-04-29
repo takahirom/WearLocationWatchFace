@@ -3,7 +3,6 @@ package com.kogitune.wearlocationwatchface.google_api_client;
 import android.content.Context;
 import android.os.Bundle;
 
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 
@@ -36,12 +35,9 @@ public class OnSubscribeGoogleAPIClientConnection implements Observable.OnSubscr
                 subscriber.onCompleted();
             }
         });
-        googleAPIClient.registerConnectionFailedListener(new GoogleApiClient.OnConnectionFailedListener() {
-            @Override
-            public void onConnectionFailed(ConnectionResult connectionResult) {
-                subscriber.onError(new RuntimeException(connectionResult.toString()));
-                subscriber.onCompleted();
-            }
+        googleAPIClient.registerConnectionFailedListener(connectionResult -> {
+            subscriber.onError(new RuntimeException(connectionResult.toString()));
+            subscriber.onCompleted();
         });
         googleAPIClient.connect();
     }

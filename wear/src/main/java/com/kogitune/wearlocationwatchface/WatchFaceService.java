@@ -4,6 +4,8 @@ package com.kogitune.wearlocationwatchface;
  * Created by takam on 2014/12/29.
  */
 
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
@@ -19,6 +21,7 @@ import android.view.WindowInsets;
 import android.widget.Toast;
 
 import com.kogitune.wearlocationwatchface.google_api_client.GoogleApiClientObservable;
+import com.kogitune.wearlocationwatchface.google_api_client.LocationNotAvailableException;
 import com.kogitune.wearsharedpreference.WearSharedPreference;
 
 import org.json.JSONArray;
@@ -87,11 +90,20 @@ public class WatchFaceService extends CanvasWatchFaceService implements WearShar
                     int range = new WearSharedPreference(this).get(getString(R.string.key_preference_search_range), getResources().getInteger(R.integer.search_range_default));
                     return "https://api.flickr.com/services/rest/?method=flickr.photos.search&group_id=1463451@N25&api_key=" + BuildConfig.FLICKR_API_KEY + "&license=1%2C2%2C3%2C4%2C5%2C6&lat=" + location.getLatitude() + "&lon=" + location.getLongitude() + "&radius=" + range + "&extras=url_n,url_l&per_page=30&format=json&nojsoncallback=1";
                 }).flatMap(url -> GoogleApiClientObservable.fetchText(this, url))
-                .timeout(15, TimeUnit.SECONDS)
+                .timeout(20, TimeUnit.SECONDS)
                 .observeOn(mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(this::applyView,
                         e -> {
+                            if (e instanceof LocationNotAvailableException) {
+                                try {
+                                    final Intent intent = new Intent("android.settings.LOCATION_SOURCE_SETTINGS");
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    startActivity(intent);
+                                    return;
+                                } catch (final ActivityNotFoundException e1) {
+                                }
+                            }
                             floatingActionBarManager.stopRefresh();
                             Toast.makeText(WatchFaceService.this,"Can't get photo in time.",Toast.LENGTH_SHORT);
                             e.printStackTrace();
