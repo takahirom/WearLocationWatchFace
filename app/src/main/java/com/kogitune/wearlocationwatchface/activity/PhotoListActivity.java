@@ -104,17 +104,18 @@ public class PhotoListActivity extends RxActionBarActivity {
     private void setupPhotoList() {
         final WearSharedPreference wearSharedPreference = new WearSharedPreference(this);
         final String photoIds = wearSharedPreference.get(getString(R.string.key_preference_photo_ids), "");
-        final String[] photoIdArray = photoIds.split(",");
-        ArrayList list = new ArrayList();
-        final List<String> photoIdList = new ArrayList<>(Arrays.asList(photoIdArray));
+        final String[] savedPhotoIdArray = photoIds.split(",");
+        final List<String> savedPhotoIdList = new ArrayList<>(Arrays.asList(savedPhotoIdArray));
 
-        final int itemCount = photoListAdapter.getItemCount();
-        for (int i = 0; i < itemCount; i++) {
-            photoIdList.remove(0);
+        final int shownItemCount = photoListAdapter.getItemCount();
+        int startIndex = shownItemCount < savedPhotoIdList.size() ? shownItemCount - 1 : savedPhotoIdList.size() - 1;
+        if (startIndex < 0) {
+            startIndex = 0;
         }
+        final List<String> addPhotoIdList = savedPhotoIdList.subList(startIndex, savedPhotoIdList.size() - 1);
 
         final long startTime = AnimationUtils.currentAnimationTimeMillis();
-        LifecycleObservable.bindActivityLifecycle(lifecycle(), Observable.from(photoIdList).concatMap(new Func1<String, Observable<PhotoShowInfo>>() {
+        LifecycleObservable.bindActivityLifecycle(lifecycle(), Observable.from(addPhotoIdList).concatMap(new Func1<String, Observable<PhotoShowInfo>>() {
 
             @Override
             public Observable<PhotoShowInfo> call(String s) {
@@ -136,17 +137,9 @@ public class PhotoListActivity extends RxActionBarActivity {
                 return photoShowInfo;
             }
         }).subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread()).subscribe(new Action1<PhotoShowInfo>() {
-            @Override
-            public void call(PhotoShowInfo photoShowInfo) {
-                photoListAdapter.addPhotoShowInfo(photoShowInfo);
-            }
-        }, new Action1<Throwable>() {
-            @Override
-            public void call(Throwable throwable) {
-                throwable.printStackTrace();
-            }
-        });
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(photoListAdapter::addPhotoShowInfo
+                        , throwable -> throwable.printStackTrace());
 
 
     }
@@ -187,8 +180,6 @@ public class PhotoListActivity extends RxActionBarActivity {
                 super.onDrawerClosed(drawerView);
 
             }
-
-
         };
         drawer.setDrawerListener(drawerToggle);
         drawerToggle.syncState();
@@ -210,6 +201,7 @@ public class PhotoListActivity extends RxActionBarActivity {
                 @Override
                 public void call(PhotoShowInfo photoShowInfo) {
                     photoListAdapter.addNewPhoto(photoShowInfo);
+                    photoLayoutManager.scrollToPosition(0);
                 }
             });
         });
