@@ -118,8 +118,8 @@ public class PhotoListActivity extends RxActionBarActivity {
         LifecycleObservable.bindActivityLifecycle(lifecycle(), Observable.from(addPhotoIdList).concatMap(new Func1<String, Observable<PhotoShowInfo>>() {
 
             @Override
-            public Observable<PhotoShowInfo> call(String s) {
-                return flickrObservable.fetchPhotoInfo(s);
+            public Observable<PhotoShowInfo> call(String photoId) {
+                return flickrObservable.fetchPhotoInfo(photoId);
             }
         })).map(new Func1<PhotoShowInfo, PhotoShowInfo>() {
             @Override
