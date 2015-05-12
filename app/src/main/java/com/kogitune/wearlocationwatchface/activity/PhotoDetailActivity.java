@@ -4,7 +4,6 @@ import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -46,7 +45,6 @@ import rx.android.content.ContentObservable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.android.view.ViewObservable;
 import rx.functions.Action1;
-import rx.functions.Func2;
 import rx.schedulers.Schedulers;
 
 public class PhotoDetailActivity extends ActionBarActivity implements ObservableScrollView.Callbacks {
@@ -126,8 +124,6 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
     }
 
     private void setupViews() {
-        Resources res = getResources();
-
         toolbar.setTitle(photoShowInfo.title);
         toolbar.getMenu().clear();
         setSupportActionBar(toolbar);
@@ -162,7 +158,7 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
                 lastGeoLocation = location.getLatitude() + "," + location.getLongitude();
                 photoPlace.setText(lastGeoLocation);
             }
-        }, throwable -> throwable.printStackTrace());
+        }, Throwable::printStackTrace);
 
         ViewObservable.clicks(photoPlace).subscribe(v -> {
             if (lastGeoLocation == null) {
@@ -304,17 +300,12 @@ public class PhotoDetailActivity extends ActionBarActivity implements Observable
                 .doOnNext(request -> request.setAllowedNetworkTypes(
                         DownloadManager.Request.NETWORK_WIFI
                                 | DownloadManager.Request.NETWORK_MOBILE))
-                .map(request -> downloadManager.enqueue(request));
+                .map(downloadManager::enqueue);
         Observable.zip(
                 ContentObservable
                         .fromBroadcast(this, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)),
                 downloadObservable,
-                new Func2<Intent, Long, Long>() {
-                    @Override
-                    public Long call(Intent intent, Long downloadId) {
-                        return intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) == downloadId ? downloadId : null;
-                    }
-                }).filter(downloadId -> downloadId != null)
+                (intent, downloadId) -> intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) == downloadId ? downloadId : null).filter(downloadId -> downloadId != null)
                 .subscribe(downloadId->{
                     Intent openFileIntent = new Intent();
                     openFileIntent.setAction(Intent.ACTION_VIEW);

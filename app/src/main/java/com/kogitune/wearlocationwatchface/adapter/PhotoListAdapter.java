@@ -52,14 +52,11 @@ public class PhotoListAdapter extends RecyclerView.Adapter<PhotoListAdapter.View
         runEnterAnimation(holder.itemView, position);
         final PhotoShowInfo photoShowInfo = photoShowInfoList.get(position);
         holder.textView.setText(photoShowInfo.title);
-        holder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final Intent intent = new Intent(v.getContext(), PhotoDetailActivity.class);
-                intent.putExtras(photoShowInfoList.get(position).getBundle());
-                final Bitmap bitmap = ((BitmapDrawable) holder.imageView.getDrawable()).getBitmap();
-                ActivityTransitionLauncher.with((Activity) v.getContext()).image(bitmap).from(holder.imageView).launch(intent);
-            }
+        holder.itemView.setOnClickListener(v -> {
+            final Intent intent = new Intent(v.getContext(), PhotoDetailActivity.class);
+            intent.putExtras(photoShowInfoList.get(position).getBundle());
+            final Bitmap bitmap = ((BitmapDrawable) holder.imageView.getDrawable()).getBitmap();
+            ActivityTransitionLauncher.with((Activity) v.getContext()).image(bitmap).from(holder.imageView).launch(intent);
         });
         Glide.with(holder.imageView.getContext())
                 .load(photoShowInfo.url)
