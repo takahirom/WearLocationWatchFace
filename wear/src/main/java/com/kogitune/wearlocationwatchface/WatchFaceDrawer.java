@@ -105,7 +105,8 @@ public class WatchFaceDrawer {
         }
 
 
-
+        // FIXME: use dp
+        final int X_POSITION = insets.isRound() ? 80 : 20;
         // draw time
         if (layoutCalc.isCenterTimeText) {
             final Paint transparentPaint = new Paint(whiteBigFontPaint);
@@ -128,14 +129,14 @@ public class WatchFaceDrawer {
             canvas.drawText(minute, drawRect.right - minuteRect.width(), drawRect.top, minutePaint);
         } else {
             if (insets.isRound()) {
-                canvas.drawText(timeFormat.format(new Date()), 20, layoutCalc.timeTextTop, whiteBigFontPaint);
+                canvas.drawText(timeFormat.format(new Date()), X_POSITION, layoutCalc.timeTextTop, whiteBigFontPaint);
             }else{
-                canvas.drawText(timeFormat.format(new Date()), 20, layoutCalc.timeTextTop, whiteBigFontPaint);
+                canvas.drawText(timeFormat.format(new Date()), X_POSITION, layoutCalc.timeTextTop, whiteBigFontPaint);
             }
         }
 
         // draw date
-        canvas.drawText(dateFormat.format(new Date()), 20, layoutCalc.dateTextTop, whiteMediumFontPaint);
+        canvas.drawText(dateFormat.format(new Date()), X_POSITION, layoutCalc.dateTextTop, whiteMediumFontPaint);
         if (state == State.DRAWING) {
             if (radius / 2 > wearRect.width()) {
                 radius = 0;
@@ -210,9 +211,10 @@ public class WatchFaceDrawer {
     }
 
     private void helplesslyShowText(Canvas canvas, Paint whiteMediumPaint, Paint whiteBigPaint) {
+        final int X_POSITION = insets.isRound() ? 80 : 20;
         drawCenterText(canvas, whiteBigPaint, hourFormat.format(new Date()), 0);
         drawCenterText(canvas, whiteBigPaint, minuteFormat.format(new Date()), 0);
-        canvas.drawText(dateFormat.format(new Date()), 20, 0, whiteMediumPaint);
+        canvas.drawText(dateFormat.format(new Date()), X_POSITION, 0, whiteMediumPaint);
     }
 
     // return draw rect

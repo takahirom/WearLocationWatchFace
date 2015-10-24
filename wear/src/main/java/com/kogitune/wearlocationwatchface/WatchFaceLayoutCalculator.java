@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.support.v7.graphics.Palette;
+import android.util.Log;
 import android.view.WindowInsets;
 
 /**
@@ -53,13 +54,12 @@ public class WatchFaceLayoutCalculator {
         actionButtonX = wearRect.right - actionButtonMargin - actionButtonRadius;
         actionButtonY = (int) (bottomPaperTop - actionButtonRadius / 2);
 
+        Log.d(TAG, "peekCardPosition:" + peekCardPosition);
         if (peekCardPosition > 0) {
             timeInPictureMode(wearRect, imageRatio, palette);
             return;
         }
         timeInPaperMode(wearRect, imageRatio, palette);
-
-
     }
 
     private void timeInPictureMode(Rect wearRect, float imageRatio, Palette palette) {
